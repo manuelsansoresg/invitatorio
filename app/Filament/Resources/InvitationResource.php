@@ -88,19 +88,29 @@ class InvitationResource extends Resource
         return $scale[$size] ?? $scale['text-lg'];
     }
 
-    public static function makeTypographyPreview(string $name, string $fontField, string $sizeField, ?string $colorField = null, string $label = 'Vista previa', string $sample = 'Aa Bb Cc 123'): Forms\Components\Placeholder
+    public static function makeTypographyPreview(string $name, string $fontField, string $sizeField, ?string $colorField = null, string $label = 'Vista previa', string $sample = 'Aa Bb Cc 123', ?string $textField = null): Forms\Components\Placeholder
     {
         return Forms\Components\Placeholder::make($name)
             ->label($label)
-            ->content(function (Get $get) use ($fontField, $sizeField, $colorField, $sample): HtmlString {
+            ->content(function (Get $get) use ($fontField, $sizeField, $colorField, $sample, $textField): HtmlString {
                 $fontFamily = $get($fontField) ?: 'Playfair Display';
                 $sizeKey = $get($sizeField) ?: 'text-lg';
                 $color = $colorField ? ($get($colorField) ?: '#111827') : '#111827';
                 $fontSize = self::mapSizeToRem($sizeKey);
+                $text = $sample;
+
+                if ($textField !== null) {
+                    $rawText = (string) $get($textField);
+                    $strippedText = trim(strip_tags($rawText));
+
+                    if ($strippedText !== '') {
+                        $text = $strippedText;
+                    }
+                }
 
                 return new HtmlString(
                     '<div style="padding:0.25rem 0; font-family:\''.e($fontFamily).'\', serif; font-size:'.e($fontSize).'; color:'.e($color).';">'.
-                    e($sample).
+                    e($text).
                     '</div>'
                 );
             })
@@ -236,7 +246,8 @@ class InvitationResource extends Resource
                                                                         'title_text_size',
                                                                         'title_color',
                                                                         'Vista previa título',
-                                                                        'Título de ejemplo'
+                                                                        'Título de ejemplo',
+                                                                        'title'
                                                                     ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Texto')
@@ -261,7 +272,8 @@ class InvitationResource extends Resource
                                                                         'body_text_size',
                                                                         'body_color',
                                                                         'Vista previa texto',
-                                                                        'Texto de ejemplo'
+                                                                        'Texto de ejemplo',
+                                                                        'content'
                                                                     ),
                                                                 ]),
                                                         ]
@@ -276,15 +288,30 @@ class InvitationResource extends Resource
                                             ->tabs([
                                                 Forms\Components\Tabs\Tab::make('Contenido')
                                                     ->schema([
+                                                        Forms\Components\TextInput::make('title')
+                                                            ->label('Título')
+                                                            ->default('Ceremonia')
+                                                            ->live(),
+                                                        Forms\Components\FileUpload::make('image')
+                                                            ->label('Imagen')
+                                                            ->image()
+                                                            ->disk('public_uploads')
+                                                            ->directory('invitations/icons')
+                                                            ->visibility('public'),
                                                         Forms\Components\TextInput::make('location_name')
                                                             ->label('Nombre del Lugar'),
                                                         Forms\Components\TextInput::make('address')
                                                             ->label('Dirección'),
-                                                        Forms\Components\TimePicker::make('time')
-                                                            ->label('Hora'),
+                                                        Forms\Components\TextInput::make('time')
+                                                            ->label('Hora')
+                                                            ->placeholder('03:30 p.m.'),
                                                         Forms\Components\TextInput::make('map_link')
-                                                            ->label('Link de Mapa')
+                                                            ->label('Link del Botón (Mapa)')
                                                             ->url(),
+                                                        Forms\Components\TextInput::make('button_text')
+                                                            ->label('Texto del Botón')
+                                                            ->default('Ver mapa')
+                                                            ->live(),
                                                     ]),
                                                 Forms\Components\Tabs\Tab::make('Icono')
                                                     ->schema([
@@ -298,8 +325,8 @@ class InvitationResource extends Resource
                                                             ->label('Tamaño del Icono')
                                                             ->options(self::getIconSizeOptions())
                                                             ->default('h-16 w-16'),
-                                                        Forms\Components\FileUpload::make('image')
-                                                            ->label('Imagen Personalizada')
+                                                        Forms\Components\FileUpload::make('icon_image')
+                                                            ->label('Imagen de Icono (Opcional)')
                                                             ->image()
                                                             ->disk('public_uploads')
                                                             ->directory('invitations/icons')
@@ -314,6 +341,15 @@ class InvitationResource extends Resource
                                                                     Forms\Components\ColorPicker::make('card_background_color')
                                                                         ->label('Color de Fondo Tarjeta')
                                                                         ->default('#ffffff'),
+                                                                    Forms\Components\Select::make('card_max_width')
+                                                                        ->label('Ancho máximo en escritorio')
+                                                                        ->options([
+                                                                            'max-w-sm' => 'Estrecho',
+                                                                            'max-w-md' => 'Mediano',
+                                                                            'max-w-lg' => 'Ancho',
+                                                                            'max-w-xl' => 'Muy ancho',
+                                                                        ])
+                                                                        ->default('max-w-lg'),
                                                                     Forms\Components\FileUpload::make('card_background_image')
                                                                         ->label('Imagen de Fondo Tarjeta (Opcional)')
                                                                         ->image()
@@ -349,7 +385,8 @@ class InvitationResource extends Resource
                                                                         'title_text_size',
                                                                         'title_color',
                                                                         'Vista previa título',
-                                                                        'Título de ejemplo'
+                                                                        'Título de ejemplo',
+                                                                        'title'
                                                                     ),
                                                                     Forms\Components\Select::make('content_font_family')
                                                                         ->label('Tipografía Contenido')
@@ -373,6 +410,58 @@ class InvitationResource extends Resource
                                                                         'Vista previa contenido',
                                                                         'Texto de ejemplo'
                                                                     ),
+                                                                    Forms\Components\Select::make('time_font_family')
+                                                                        ->label('Tipografía Hora')
+                                                                        ->options(self::getFontOptions())
+                                                                        ->default('Lato')
+                                                                        ->live(),
+                                                                    Forms\Components\Select::make('time_text_size')
+                                                                        ->label('Tamaño Hora')
+                                                                        ->options(self::getSizeOptions())
+                                                                        ->default('text-lg')
+                                                                        ->live(),
+                                                                    Forms\Components\ColorPicker::make('time_color')
+                                                                        ->label('Color Hora')
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'ceremony_time_preview',
+                                                                        'time_font_family',
+                                                                        'time_text_size',
+                                                                        'time_color',
+                                                                        'Vista previa hora',
+                                                                        '18:00 hrs'
+                                                                    ),
+                                                                    Forms\Components\Fieldset::make('Botón')
+                                                                        ->schema([
+                                                                            Forms\Components\Select::make('button_font_family')
+                                                                                ->label('Tipografía Botón')
+                                                                                ->options(self::getFontOptions())
+                                                                                ->default('Lato')
+                                                                                ->live(),
+                                                                            Forms\Components\Select::make('button_text_size')
+                                                                                ->label('Tamaño Botón')
+                                                                                ->options(self::getSizeOptions())
+                                                                                ->default('text-base')
+                                                                                ->live(),
+                                                                            Forms\Components\ColorPicker::make('button_text_color')
+                                                                                ->label('Color Texto Botón')
+                                                                                ->default('#ffffff')
+                                                                                ->live(),
+                                                                            Forms\Components\ColorPicker::make('button_background_color')
+                                                                                ->label('Color Fondo Botón')
+                                                                                ->default('#111827')
+                                                                                ->live(),
+                                                                            self::makeTypographyPreview(
+                                                                                'ceremony_button_preview',
+                                                                                'button_font_family',
+                                                                                'button_text_size',
+                                                                                'button_text_color',
+                                                                                'Vista previa botón',
+                                                                                'Texto del botón',
+                                                                                'button_text'
+                                                                            ),
+                                                                        ]),
                                                                 ]),
                                                         ]
                                                     )),
@@ -386,15 +475,30 @@ class InvitationResource extends Resource
                                             ->tabs([
                                                 Forms\Components\Tabs\Tab::make('Contenido')
                                                     ->schema([
+                                                        Forms\Components\TextInput::make('title')
+                                                            ->label('Título')
+                                                            ->default('Recepción')
+                                                            ->live(),
+                                                        Forms\Components\FileUpload::make('image')
+                                                            ->label('Imagen')
+                                                            ->image()
+                                                            ->disk('public_uploads')
+                                                            ->directory('invitations/icons')
+                                                            ->visibility('public'),
                                                         Forms\Components\TextInput::make('location_name')
                                                             ->label('Nombre del Lugar'),
                                                         Forms\Components\TextInput::make('address')
                                                             ->label('Dirección'),
-                                                        Forms\Components\TimePicker::make('time')
-                                                            ->label('Hora'),
+                                                        Forms\Components\TextInput::make('time')
+                                                            ->label('Hora')
+                                                            ->placeholder('03:30 p.m.'),
                                                         Forms\Components\TextInput::make('map_link')
-                                                            ->label('Link de Mapa')
+                                                            ->label('Link del Botón (Mapa)')
                                                             ->url(),
+                                                        Forms\Components\TextInput::make('button_text')
+                                                            ->label('Texto del Botón')
+                                                            ->default('Ver mapa')
+                                                            ->live(),
                                                     ]),
                                                 Forms\Components\Tabs\Tab::make('Icono')
                                                     ->schema([
@@ -408,8 +512,8 @@ class InvitationResource extends Resource
                                                             ->label('Tamaño del Icono')
                                                             ->options(self::getIconSizeOptions())
                                                             ->default('h-16 w-16'),
-                                                        Forms\Components\FileUpload::make('image')
-                                                            ->label('Imagen Personalizada')
+                                                        Forms\Components\FileUpload::make('icon_image')
+                                                            ->label('Imagen de Icono (Opcional)')
                                                             ->image()
                                                             ->disk('public_uploads')
                                                             ->directory('invitations/icons')
@@ -424,6 +528,15 @@ class InvitationResource extends Resource
                                                                     Forms\Components\ColorPicker::make('card_background_color')
                                                                         ->label('Color de Fondo Tarjeta')
                                                                         ->default('#ffffff'),
+                                                                    Forms\Components\Select::make('card_max_width')
+                                                                        ->label('Ancho máximo en escritorio')
+                                                                        ->options([
+                                                                            'max-w-sm' => 'Estrecho',
+                                                                            'max-w-md' => 'Mediano',
+                                                                            'max-w-lg' => 'Ancho',
+                                                                            'max-w-xl' => 'Muy ancho',
+                                                                        ])
+                                                                        ->default('max-w-lg'),
                                                                     Forms\Components\FileUpload::make('card_background_image')
                                                                         ->label('Imagen de Fondo Tarjeta (Opcional)')
                                                                         ->image()
@@ -459,7 +572,8 @@ class InvitationResource extends Resource
                                                                         'title_text_size',
                                                                         'title_color',
                                                                         'Vista previa título',
-                                                                        'Título de ejemplo'
+                                                                        'Título de ejemplo',
+                                                                        'title'
                                                                     ),
                                                                     Forms\Components\Select::make('content_font_family')
                                                                         ->label('Tipografía Contenido')
@@ -483,6 +597,58 @@ class InvitationResource extends Resource
                                                                         'Vista previa contenido',
                                                                         'Texto de ejemplo'
                                                                     ),
+                                                                    Forms\Components\Select::make('time_font_family')
+                                                                        ->label('Tipografía Hora')
+                                                                        ->options(self::getFontOptions())
+                                                                        ->default('Lato')
+                                                                        ->live(),
+                                                                    Forms\Components\Select::make('time_text_size')
+                                                                        ->label('Tamaño Hora')
+                                                                        ->options(self::getSizeOptions())
+                                                                        ->default('text-lg')
+                                                                        ->live(),
+                                                                    Forms\Components\ColorPicker::make('time_color')
+                                                                        ->label('Color Hora')
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'reception_time_preview',
+                                                                        'time_font_family',
+                                                                        'time_text_size',
+                                                                        'time_color',
+                                                                        'Vista previa hora',
+                                                                        '18:00 hrs'
+                                                                    ),
+                                                                    Forms\Components\Fieldset::make('Botón')
+                                                                        ->schema([
+                                                                            Forms\Components\Select::make('button_font_family')
+                                                                                ->label('Tipografía Botón')
+                                                                                ->options(self::getFontOptions())
+                                                                                ->default('Lato')
+                                                                                ->live(),
+                                                                            Forms\Components\Select::make('button_text_size')
+                                                                                ->label('Tamaño Botón')
+                                                                                ->options(self::getSizeOptions())
+                                                                                ->default('text-base')
+                                                                                ->live(),
+                                                                            Forms\Components\ColorPicker::make('button_text_color')
+                                                                                ->label('Color Texto Botón')
+                                                                                ->default('#ffffff')
+                                                                                ->live(),
+                                                                            Forms\Components\ColorPicker::make('button_background_color')
+                                                                                ->label('Color Fondo Botón')
+                                                                                ->default('#111827')
+                                                                                ->live(),
+                                                                            self::makeTypographyPreview(
+                                                                                'reception_button_preview',
+                                                                                'button_font_family',
+                                                                                'button_text_size',
+                                                                                'button_text_color',
+                                                                                'Vista previa botón',
+                                                                                'Texto del botón',
+                                                                                'button_text'
+                                                                            ),
+                                                                        ]),
                                                                 ]),
                                                         ]
                                                     )),
@@ -548,7 +714,8 @@ class InvitationResource extends Resource
                                                                         'title_text_size',
                                                                         'title_color',
                                                                         'Vista previa título',
-                                                                        'Título de ejemplo'
+                                                                        'Título de ejemplo',
+                                                                        'title'
                                                                     ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Descripción')
@@ -573,7 +740,8 @@ class InvitationResource extends Resource
                                                                         'content_text_size',
                                                                         'content_color',
                                                                         'Vista previa descripción',
-                                                                        'Texto de ejemplo'
+                                                                        'Texto de ejemplo',
+                                                                        'content'
                                                                     ),
                                                                 ]),
                                                         ]
@@ -651,7 +819,8 @@ class InvitationResource extends Resource
                                                                         'title_text_size',
                                                                         'title_color',
                                                                         'Vista previa título',
-                                                                        'Título de ejemplo'
+                                                                        'Título de ejemplo',
+                                                                        'title'
                                                                     ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Descripción')
@@ -676,7 +845,8 @@ class InvitationResource extends Resource
                                                                         'description_text_size',
                                                                         'description_color',
                                                                         'Vista previa descripción',
-                                                                        'Texto de ejemplo'
+                                                                        'Texto de ejemplo',
+                                                                        'description'
                                                                     ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Link')
@@ -701,7 +871,8 @@ class InvitationResource extends Resource
                                                                         'link_text_size',
                                                                         'link_color',
                                                                         'Vista previa link',
-                                                                        'Texto de ejemplo'
+                                                                        'Texto de ejemplo',
+                                                                        'link_text'
                                                                     ),
                                                                 ]),
                                                         ]
@@ -766,7 +937,8 @@ class InvitationResource extends Resource
                                                                         'title_text_size',
                                                                         'title_color',
                                                                         'Vista previa título',
-                                                                        'Comparte con Nosotros'
+                                                                        'Comparte con Nosotros',
+                                                                        'title'
                                                                     ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Hashtag')
@@ -791,7 +963,8 @@ class InvitationResource extends Resource
                                                                         'hashtag_text_size',
                                                                         'hashtag_color',
                                                                         'Vista previa hashtag',
-                                                                        '#hashtag'
+                                                                        '#hashtag',
+                                                                        'hashtag'
                                                                     ),
                                                                 ]),
                                                         ]
@@ -871,7 +1044,8 @@ class InvitationResource extends Resource
                                                                         'title_text_size',
                                                                         'title_color',
                                                                         'Vista previa título',
-                                                                        'Confirmación de Asistencia'
+                                                                        'Confirmación de Asistencia',
+                                                                        'title'
                                                                     ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Descripción')
@@ -896,7 +1070,8 @@ class InvitationResource extends Resource
                                                                         'description_text_size',
                                                                         'description_color',
                                                                         'Vista previa descripción',
-                                                                        'Texto de ejemplo'
+                                                                        'Texto de ejemplo',
+                                                                        'description'
                                                                     ),
                                                                 ]),
                                                         ]

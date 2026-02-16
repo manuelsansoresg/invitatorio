@@ -240,6 +240,14 @@
                             if ($cardBgImage) {
                                 $cardStyle .= "background-image: url('{$cardBgImage}'); background-size: cover; background-position: center;";
                             }
+                            $cardWidthKey = $data['card_max_width'] ?? 'max-w-lg';
+                            $cardWidthMap = [
+                                'max-w-sm' => '280px',
+                                'max-w-md' => '380px',
+                                'max-w-lg' => '520px',
+                                'max-w-xl' => '960px',
+                            ];
+                            $cardMaxWidth = $cardWidthMap[$cardWidthKey] ?? $cardWidthMap['max-w-lg'];
                             $iconSize = $data['icon_size'] ?? 'h-16 w-16';
                             $ceremonyTitleFontFamily = $data['title_font_family'] ?? $fontFamily;
                             $ceremonyTitleTextSize = $data['title_text_size'] ?? 'text-2xl';
@@ -247,19 +255,40 @@
                             $ceremonyContentFontFamily = $data['content_font_family'] ?? $fontFamily;
                             $ceremonyContentTextSize = $data['content_text_size'] ?? $textSize;
                             $ceremonyContentColor = $data['content_color'] ?? $cardTextColor;
+                            $ceremonyTimeFontFamily = $data['time_font_family'] ?? $ceremonyContentFontFamily;
+                            $ceremonyTimeTextSize = $data['time_text_size'] ?? $ceremonyContentTextSize;
+                            $ceremonyTimeColor = $data['time_color'] ?? $ceremonyContentColor;
                             $ceremonyTitleFontSize = $sizeScale[$ceremonyTitleTextSize] ?? $sizeScale['text-xl'];
                             $ceremonyContentFontSize = $sizeScale[$ceremonyContentTextSize] ?? $sizeScale['text-lg'];
+                            $ceremonyTimeFontSize = $sizeScale[$ceremonyTimeTextSize] ?? $ceremonyContentFontSize;
+                            $ceremonyTimeValue = $data['time'] ?? null;
+                            if (empty($ceremonyTimeValue) && $invitation->ceremony_time) {
+                                $ceremonyTimeValue = $invitation->ceremony_time->format('h:i a');
+                            }
+                            $buttonFontFamily = $data['button_font_family'] ?? $fontFamily;
+                            $buttonTextSize = $data['button_text_size'] ?? 'text-base';
+                            $buttonTextColor = $data['button_text_color'] ?? '#ffffff';
+                            $buttonBackgroundColor = $data['button_background_color'] ?? '#111827';
+                            $buttonFontSize = $sizeScale[$buttonTextSize] ?? $sizeScale['text-base'];
                         @endphp
-                        <div class="text-center max-w-lg mx-auto border rounded-lg p-8 shadow-sm {{ $textSize }}" style="{{ $cardStyle }}">
-                            @if(isset($data['image']) && $data['image'])
-                                <img src="{{ url('uploads/' . $data['image']) }}" class="{{ $iconSize }} mx-auto mb-4 object-contain">
+                        <div class="text-center mx-auto border rounded-lg p-8 shadow-sm {{ $textSize }}" style="{{ $cardStyle }} max-width: {{ $cardMaxWidth }};">
+                            @if(isset($data['icon_image']) && $data['icon_image'])
+                                <img src="{{ url('uploads/' . $data['icon_image']) }}" class="{{ $iconSize }} mx-auto mb-4 object-contain">
                             @else
                                 <x-icon name="{{ $data['icon'] ?? 'heroicon-o-home' }}" class="{{ $iconSize }} mx-auto mb-4 opacity-80" />
                             @endif
                             
                             <h3 class="font-bold mb-4" style="font-family: '{{ $ceremonyTitleFontFamily }}', serif; font-size: {{ $ceremonyTitleFontSize }}; color: {{ $ceremonyTitleColor }};">
-                                Ceremonia
+                                {{ $data['title'] ?? 'Ceremonia' }}
                             </h3>
+                            @if(!empty($ceremonyTimeValue))
+                                <p class="font-bold mb-4" style="font-family: '{{ $ceremonyTimeFontFamily }}', serif; font-size: {{ $ceremonyTimeFontSize }}; color: {{ $ceremonyTimeColor }};">
+                                    {{ $ceremonyTimeValue }}
+                                </p>
+                            @endif
+                            @if($data['image'])
+                                <img src="{{ url('uploads/' . $data['image']) }}" class="mx-auto mb-4 max-w-xs rounded-lg shadow-md object-contain">
+                            @endif
                             @if($data['location_name'])
                                 <p class="font-semibold mb-2" style="font-family: '{{ $ceremonyContentFontFamily }}', serif; font-size: {{ $ceremonyContentFontSize }}; color: {{ $ceremonyContentColor }};">
                                     {{ $data['location_name'] }}
@@ -270,14 +299,14 @@
                                     {{ $data['address'] }}
                                 </p>
                             @endif
-                            @if($data['time'])
-                                <p class="font-bold mb-6" style="font-family: '{{ $ceremonyContentFontFamily }}', serif; font-size: {{ $ceremonyContentFontSize }}; color: {{ $ceremonyContentColor }};">
-                                    {{ \Carbon\Carbon::parse($data['time'])->format('H:i') }} hrs
-                                </p>
-                            @endif
                             @if($data['map_link'])
-                                <a href="{{ $data['map_link'] }}" target="_blank" class="inline-block bg-gray-800 text-white px-6 py-2 rounded-full hover:bg-gray-700 transition">
-                                    Ver Mapa
+                                <a
+                                    href="{{ $data['map_link'] }}"
+                                    target="_blank"
+                                    class="inline-block px-6 py-2 rounded-full hover:opacity-90 transition"
+                                    style="font-family: '{{ $buttonFontFamily }}', serif; font-size: {{ $buttonFontSize }}; color: {{ $buttonTextColor }}; background-color: {{ $buttonBackgroundColor }};"
+                                >
+                                    {{ $data['button_text'] ?? 'Ver mapa' }}
                                 </a>
                             @endif
                         </div>
@@ -294,6 +323,14 @@
                             if ($cardBgImage) {
                                 $cardStyle .= "background-image: url('{$cardBgImage}'); background-size: cover; background-position: center;";
                             }
+                            $cardWidthKey = $data['card_max_width'] ?? 'max-w-lg';
+                            $cardWidthMap = [
+                                'max-w-sm' => '280px',
+                                'max-w-md' => '380px',
+                                'max-w-lg' => '520px',
+                                'max-w-xl' => '960px',
+                            ];
+                            $cardMaxWidth = $cardWidthMap[$cardWidthKey] ?? $cardWidthMap['max-w-lg'];
                             $iconSize = $data['icon_size'] ?? 'h-16 w-16';
                             $receptionTitleFontFamily = $data['title_font_family'] ?? $fontFamily;
                             $receptionTitleTextSize = $data['title_text_size'] ?? 'text-2xl';
@@ -301,19 +338,40 @@
                             $receptionContentFontFamily = $data['content_font_family'] ?? $fontFamily;
                             $receptionContentTextSize = $data['content_text_size'] ?? $textSize;
                             $receptionContentColor = $data['content_color'] ?? $cardTextColor;
+                            $receptionTimeFontFamily = $data['time_font_family'] ?? $receptionContentFontFamily;
+                            $receptionTimeTextSize = $data['time_text_size'] ?? $receptionContentTextSize;
+                            $receptionTimeColor = $data['time_color'] ?? $receptionContentColor;
                             $receptionTitleFontSize = $sizeScale[$receptionTitleTextSize] ?? $sizeScale['text-xl'];
                             $receptionContentFontSize = $sizeScale[$receptionContentTextSize] ?? $sizeScale['text-lg'];
+                            $receptionTimeFontSize = $sizeScale[$receptionTimeTextSize] ?? $receptionContentFontSize;
+                            $receptionTimeValue = $data['time'] ?? null;
+                            if (empty($receptionTimeValue) && $invitation->reception_time) {
+                                $receptionTimeValue = $invitation->reception_time->format('h:i a');
+                            }
+                            $receptionButtonFontFamily = $data['button_font_family'] ?? $fontFamily;
+                            $receptionButtonTextSize = $data['button_text_size'] ?? 'text-base';
+                            $receptionButtonTextColor = $data['button_text_color'] ?? '#ffffff';
+                            $receptionButtonBackgroundColor = $data['button_background_color'] ?? '#111827';
+                            $receptionButtonFontSize = $sizeScale[$receptionButtonTextSize] ?? $sizeScale['text-base'];
                         @endphp
-                        <div class="text-center max-w-lg mx-auto border rounded-lg p-8 shadow-sm {{ $textSize }}" style="{{ $cardStyle }}">
-                            @if(isset($data['image']) && $data['image'])
-                                <img src="{{ url('uploads/' . $data['image']) }}" class="{{ $iconSize }} mx-auto mb-4 object-contain">
+                        <div class="text-center mx-auto border rounded-lg p-8 shadow-sm {{ $textSize }}" style="{{ $cardStyle }} max-width: {{ $cardMaxWidth }};">
+                            @if(isset($data['icon_image']) && $data['icon_image'])
+                                <img src="{{ url('uploads/' . $data['icon_image']) }}" class="{{ $iconSize }} mx-auto mb-4 object-contain">
                             @else
                                 <x-icon name="{{ $data['icon'] ?? 'heroicon-o-musical-note' }}" class="{{ $iconSize }} mx-auto mb-4 opacity-80" />
                             @endif
                             
                             <h3 class="font-bold mb-4" style="font-family: '{{ $receptionTitleFontFamily }}', serif; font-size: {{ $receptionTitleFontSize }}; color: {{ $receptionTitleColor }};">
-                                Recepción
+                                {{ $data['title'] ?? 'Recepción' }}
                             </h3>
+                            @if(!empty($receptionTimeValue))
+                                <p class="font-bold mb-4" style="font-family: '{{ $receptionTimeFontFamily }}', serif; font-size: {{ $receptionTimeFontSize }}; color: {{ $receptionTimeColor }};">
+                                    {{ $receptionTimeValue }}
+                                </p>
+                            @endif
+                            @if($data['image'])
+                                <img src="{{ url('uploads/' . $data['image']) }}" class="mx-auto mb-4 max-w-xs rounded-lg shadow-md object-contain">
+                            @endif
                             @if($data['location_name'])
                                 <p class="font-semibold mb-2" style="font-family: '{{ $receptionContentFontFamily }}', serif; font-size: {{ $receptionContentFontSize }}; color: {{ $receptionContentColor }};">
                                     {{ $data['location_name'] }}
@@ -324,14 +382,14 @@
                                     {{ $data['address'] }}
                                 </p>
                             @endif
-                            @if($data['time'])
-                                <p class="font-bold mb-6" style="font-family: '{{ $receptionContentFontFamily }}', serif; font-size: {{ $receptionContentFontSize }}; color: {{ $receptionContentColor }};">
-                                    {{ \Carbon\Carbon::parse($data['time'])->format('H:i') }} hrs
-                                </p>
-                            @endif
                             @if($data['map_link'])
-                                <a href="{{ $data['map_link'] }}" target="_blank" class="inline-block bg-gray-800 text-white px-6 py-2 rounded-full hover:bg-gray-700 transition">
-                                    Ver Mapa
+                                <a
+                                    href="{{ $data['map_link'] }}"
+                                    target="_blank"
+                                    class="inline-block px-6 py-2 rounded-full hover:opacity-90 transition"
+                                    style="font-family: '{{ $receptionButtonFontFamily }}', serif; font-size: {{ $receptionButtonFontSize }}; color: {{ $receptionButtonTextColor }}; background-color: {{ $receptionButtonBackgroundColor }};"
+                                >
+                                    {{ $data['button_text'] ?? 'Ver mapa' }}
                                 </a>
                             @endif
                         </div>
