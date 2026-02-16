@@ -55,10 +55,17 @@ class CategoryResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->requiresConfirmation()
+                    ->modalHeading('Eliminar categoría')
+                    ->modalDescription('Al eliminar la categoría, se eliminarán también sus invitaciones y archivos asociados. ¿Deseas continuar?'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->modalHeading('Eliminar categorías seleccionadas')
+                        ->modalDescription('Las categorías seleccionadas y todas sus invitaciones serán eliminadas. ¿Deseas continuar?'),
                 ]),
             ]);
     }

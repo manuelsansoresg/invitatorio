@@ -14,6 +14,20 @@
             font-family: 'Playfair Display', serif;
         }
         /* Dynamic Styles from Database */
+        .anim {
+            opacity: 0;
+            transform: translateY(14px);
+            transition-property: opacity, transform;
+        }
+        .anim.is-in {
+            opacity: 1;
+            transform: none;
+        }
+        .anim[data-anim="fade"] { transform: translateY(0); }
+        .anim[data-anim="fade-down"] { transform: translateY(-14px); }
+        .anim[data-anim="slide-left"] { transform: translateX(-18px); }
+        .anim[data-anim="slide-right"] { transform: translateX(18px); }
+        .anim[data-anim="zoom-in"] { transform: scale(0.96); }
         .hero-title {
             font-family: '{{ $invitation->design_settings['hero']['font_family'] ?? 'Playfair Display' }}', serif;
             color: {{ $invitation->design_settings['hero']['text_color'] ?? '#ffffff' }};
@@ -137,7 +151,10 @@
     @endif
 
     @if($invitation->background_music_path)
-        <audio autoplay loop controls class="fixed bottom-4 right-4 z-50">
+        @php
+            $musicAutoplay = $invitation->background_music_autoplay ?? true;
+        @endphp
+        <audio @if($musicAutoplay) autoplay @endif loop controls class="fixed bottom-4 right-4 z-50">
             <source src="{{ asset('uploads/' . $invitation->background_music_path) }}" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
@@ -211,7 +228,17 @@
                 $sectionMarginBottom = $marginScale[$marginBottomKey] ?? $marginScale['md'];
             @endphp
 
-            <section class="{{ $paddingY }} w-full relative" style="{{ $style }} margin-top: {{ $sectionMarginTop }}; margin-bottom: {{ $sectionMarginBottom }};">
+            @php
+                $enableAnim = (bool) ($data['enable_animation'] ?? false);
+                $animPreset = $data['animation_preset'] ?? 'fade-up';
+                $animDuration = (int) ($data['animation_duration'] ?? 700);
+                $animDelay = (int) ($data['animation_delay'] ?? 0);
+                $animClass = $enableAnim ? 'anim' : '';
+                $animData = $enableAnim ? "data-anim=\"{$animPreset}\" data-duration=\"{$animDuration}\" data-delay=\"{$animDelay}\"" : '';
+                $animStyle = $enableAnim ? "transition-duration: {$animDuration}ms; transition-delay: {$animDelay}ms;" : '';
+            @endphp
+
+            <section class="{{ $paddingY }} w-full relative {{ $animClass }}" {!! $animData ? $animData : '' !!} style="{{ $style }} margin-top: {{ $sectionMarginTop }}; margin-bottom: {{ $sectionMarginBottom }}; {{ $animStyle }}">
                 <!-- Overlay if background image exists to improve text readability -->
                 @if($bgImage)
                     <div class="absolute inset-0 bg-black bg-opacity-30 z-0"></div>
@@ -757,5 +784,32 @@
         }, 1000);
     </script>
     @endif
+    <script>
+        (function () {
+            const els = document.querySelectorAll('.anim');
+            if (!('IntersectionObserver' in window) || els.length === 0) {
+                els.forEach(el => el.classList.add('is-in'));
+                return;
+            }
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-in');
+                        const once = true;
+                        if (once) {
+                            io.unobserve(entry.target);
+                        }
+                    }
+                });
+            }, { threshold: 0.15 });
+            els.forEach(el => {
+                const duration = el.getAttribute('data-duration');
+                const delay = el.getAttribute('data-delay');
+                if (duration) el.style.transitionDuration = duration + 'ms';
+                if (delay) el.style.transitionDelay = delay + 'ms';
+                io.observe(el);
+            });
+        })();
+    </script>
 </body>
 </html>

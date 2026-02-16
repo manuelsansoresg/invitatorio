@@ -13,7 +13,10 @@ class EditInvitation extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->requiresConfirmation()
+                ->modalHeading('Eliminar invitación')
+                ->modalDescription('Esta acción eliminará la invitación y todos los archivos asociados. ¿Deseas continuar?'),
         ];
     }
 }

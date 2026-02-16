@@ -61,6 +61,46 @@ class InvitationResource extends Resource
                     'xl' => 'Extra grande',
                 ])
                 ->default('md'),
+            Forms\Components\Fieldset::make('Animación')
+                ->schema([
+                    Forms\Components\Toggle::make('enable_animation')
+                        ->label('Habilitar animación al hacer scroll')
+                        ->default(false)
+                        ->live(),
+                    Forms\Components\Select::make('animation_preset')
+                        ->label('Plantilla de animación')
+                        ->options([
+                            'fade-up' => 'Aparecer hacia arriba',
+                            'fade' => 'Aparecer suave',
+                            'fade-down' => 'Aparecer hacia abajo',
+                            'slide-left' => 'Deslizar desde la izquierda',
+                            'slide-right' => 'Deslizar desde la derecha',
+                            'zoom-in' => 'Zoom in',
+                        ])
+                        ->default('fade-up')
+                        ->live(),
+                    Forms\Components\Select::make('animation_duration')
+                        ->label('Duración')
+                        ->options([
+                            '300' => 'Corta (300ms)',
+                            '500' => 'Media (500ms)',
+                            '700' => 'Larga (700ms)',
+                            '1000' => 'Muy larga (1000ms)',
+                        ])
+                        ->default('700')
+                        ->live(),
+                    Forms\Components\Select::make('animation_delay')
+                        ->label('Retardo')
+                        ->options([
+                            '0' => 'Sin retardo',
+                            '100' => '100ms',
+                            '200' => '200ms',
+                            '300' => '300ms',
+                            '500' => '500ms',
+                        ])
+                        ->default('0')
+                        ->live(),
+                ]),
         ];
     }
 
@@ -221,6 +261,9 @@ class InvitationResource extends Resource
                             ->directory('invitations/music')
                             ->visibility('public')
                             ->columnSpanFull(),
+                        Forms\Components\Toggle::make('background_music_autoplay')
+                            ->label('Reproducir música automáticamente al cargar')
+                            ->default(true),
                     ])->collapsible(),
 
                 Forms\Components\Section::make('Contenido de la Invitación')
@@ -1276,10 +1319,17 @@ class InvitationResource extends Resource
                     ->url(fn (Invitation $record): string => route('invitation.show', $record->slug))
                     ->openUrlInNewTab(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->requiresConfirmation()
+                    ->modalHeading('Eliminar invitación')
+                    ->modalDescription('Esta acción eliminará la invitación y todos los archivos asociados. ¿Deseas continuar?'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->modalHeading('Eliminar invitaciones seleccionadas')
+                        ->modalDescription('Se eliminarán las invitaciones seleccionadas y todos sus archivos asociados. ¿Deseas continuar?'),
                 ]),
             ]);
     }

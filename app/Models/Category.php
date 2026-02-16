@@ -13,4 +13,13 @@ class Category extends Model
     {
         return $this->hasMany(Invitation::class);
     }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Category $category): void {
+            $category->invitations()->each(function (Invitation $invitation): void {
+                $invitation->delete();
+            });
+        });
+    }
 }

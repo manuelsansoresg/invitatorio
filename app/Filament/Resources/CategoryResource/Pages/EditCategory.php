@@ -13,7 +13,10 @@ class EditCategory extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->requiresConfirmation()
+                ->modalHeading('Eliminar categoría')
+                ->modalDescription('Al eliminar la categoría, se eliminarán también sus invitaciones y archivos asociados. ¿Deseas continuar?'),
         ];
     }
 }
