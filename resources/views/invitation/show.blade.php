@@ -233,18 +233,25 @@
                 $animPreset = $data['animation_preset'] ?? 'fade-up';
                 $animDuration = (int) ($data['animation_duration'] ?? 700);
                 $animDelay = (int) ($data['animation_delay'] ?? 0);
+                $animateChildren = (bool) ($data['animate_children'] ?? false);
+                $childrenPreset = $data['children_preset'] ?? 'fade-up';
+                $childrenStagger = (int) ($data['children_stagger'] ?? 100);
+                if (! $enableAnim && $animateChildren) {
+                    $enableAnim = true;
+                    $animPreset = 'fade';
+                }
                 $animClass = $enableAnim ? 'anim' : '';
                 $animData = $enableAnim ? "data-anim=\"{$animPreset}\" data-duration=\"{$animDuration}\" data-delay=\"{$animDelay}\"" : '';
                 $animStyle = $enableAnim ? "transition-duration: {$animDuration}ms; transition-delay: {$animDelay}ms;" : '';
             @endphp
 
-            <section class="{{ $paddingY }} w-full relative {{ $animClass }}" {!! $animData ? $animData : '' !!} style="{{ $style }} margin-top: {{ $sectionMarginTop }}; margin-bottom: {{ $sectionMarginBottom }}; {{ $animStyle }}">
+            <section class="{{ $paddingY }} w-full relative" style="{{ $style }} margin-top: {{ $sectionMarginTop }}; margin-bottom: {{ $sectionMarginBottom }};">
                 <!-- Overlay if background image exists to improve text readability -->
                 @if($bgImage)
                     <div class="absolute inset-0 bg-black bg-opacity-30 z-0"></div>
                 @endif
 
-                <div class="container mx-auto px-4 relative z-10">
+                <div class="container mx-auto px-4 relative z-10 {{ $animClass }}" {!! $animData ? $animData : '' !!} data-children="{{ $animateChildren ? 'true' : 'false' }}" data-children-preset="{{ $childrenPreset }}" data-children-stagger="{{ $childrenStagger }}" style="{{ $animStyle }}">
                     
                     {{-- BLOCK: DEDICATION --}}
                     @if($type === 'dedication')
@@ -786,22 +793,56 @@
     @endif
     <script>
         (function () {
-            const els = document.querySelectorAll('.anim');
-            if (!('IntersectionObserver' in window) || els.length === 0) {
+            const supportsIO = 'IntersectionObserver' in window;
+
+            // Pre-configure children to avoid layout shifts (aplicar .anim a hijos si se pidió)
+            const sectionsWithChildren = document.querySelectorAll('[data-children=\"true\"]');
+            sectionsWithChildren.forEach(parent => {
+                const preset = parent.getAttribute('data-children-preset') || 'fade-up';
+                const targets = parent.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,img,video,a,button,form,.prose > *');
+                targets.forEach(t => {
+                    t.classList.add('anim');
+                    t.setAttribute('data-anim', preset);
+                    // inherit duration by default; delay will be applied on enter
+                });
+            });
+
+            // Recolectar todos los elementos animables (incluyendo los hijos añadidos arriba)
+            let els = document.querySelectorAll('.anim');
+            if (!supportsIO || els.length === 0) {
                 els.forEach(el => el.classList.add('is-in'));
                 return;
             }
+
             const io = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-in');
-                        const once = true;
-                        if (once) {
-                            io.unobserve(entry.target);
-                        }
+                    if (!entry.isIntersecting) return;
+                    const el = entry.target;
+                    // If parent has children animation, animate children with stagger
+                    if (el.getAttribute('data-children') === 'true') {
+                        const preset = el.getAttribute('data-children-preset') || 'fade-up';
+                        const baseDelay = parseInt(el.getAttribute('data-delay') || '0', 10) || 0;
+                        const duration = parseInt(el.getAttribute('data-duration') || '700', 10) || 700;
+                        const stagger = parseInt(el.getAttribute('data-children-stagger') || '100', 10) || 100;
+                        const children = el.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,img,video,a,button,form,.prose > *');
+                        // Asegurar que el contenedor también aparezca
+                        el.classList.add('is-in');
+                        children.forEach((child, i) => {
+                            child.setAttribute('data-anim', preset);
+                            child.style.transitionDuration = duration + 'ms';
+                            child.style.transitionDelay = (baseDelay + i * stagger) + 'ms';
+                            // force reflow for consistent transition
+                            // eslint-disable-next-line no-unused-expressions
+                            child.offsetHeight;
+                            child.classList.add('is-in');
+                        });
+                    } else {
+                        el.classList.add('is-in');
                     }
+                    io.unobserve(el);
                 });
             }, { threshold: 0.15 });
+
             els.forEach(el => {
                 const duration = el.getAttribute('data-duration');
                 const delay = el.getAttribute('data-delay');

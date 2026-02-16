@@ -100,6 +100,31 @@ class InvitationResource extends Resource
                         ])
                         ->default('0')
                         ->live(),
+                    Forms\Components\Toggle::make('animate_children')
+                        ->label('Animar elementos internos (título, texto, botones)')
+                        ->default(false)
+                        ->live(),
+                    Forms\Components\Select::make('children_preset')
+                        ->label('Plantilla animación interna')
+                        ->options([
+                            'fade-up' => 'Aparecer hacia arriba',
+                            'fade' => 'Aparecer suave',
+                            'slide-left' => 'Deslizar izquierda',
+                            'slide-right' => 'Deslizar derecha',
+                            'zoom-in' => 'Zoom in',
+                        ])
+                        ->default('fade-up')
+                        ->live(),
+                    Forms\Components\Select::make('children_stagger')
+                        ->label('Desfase entre elementos')
+                        ->options([
+                            '50' => '50ms',
+                            '100' => '100ms',
+                            '150' => '150ms',
+                            '200' => '200ms',
+                        ])
+                        ->default('100')
+                        ->live(),
                 ]),
         ];
     }
