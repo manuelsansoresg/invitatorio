@@ -197,9 +197,21 @@
                 if ($bgImage) {
                     $style .= "background-image: url('{$bgImage}'); background-size: cover; background-position: center;";
                 }
+                $marginTopKey = $data['margin_top'] ?? 'md';
+                $marginBottomKey = $data['margin_bottom'] ?? 'md';
+                $marginScale = [
+                    'none' => '0',
+                    'xs' => '8px',
+                    'sm' => '16px',
+                    'md' => '24px',
+                    'lg' => '32px',
+                    'xl' => '48px',
+                ];
+                $sectionMarginTop = $marginScale[$marginTopKey] ?? $marginScale['md'];
+                $sectionMarginBottom = $marginScale[$marginBottomKey] ?? $marginScale['md'];
             @endphp
 
-            <section class="{{ $paddingY }} w-full relative" style="{{ $style }}">
+            <section class="{{ $paddingY }} w-full relative" style="{{ $style }} margin-top: {{ $sectionMarginTop }}; margin-bottom: {{ $sectionMarginBottom }};">
                 <!-- Overlay if background image exists to improve text readability -->
                 @if($bgImage)
                     <div class="absolute inset-0 bg-black bg-opacity-30 z-0"></div>
@@ -236,7 +248,14 @@
                             $cardBgImage = isset($data['card_background_image']) ? url('uploads/' . $data['card_background_image']) : null;
                             $cardTextColor = $data['card_text_color'] ?? $textColor;
                             $cardBorderColor = $data['card_border_color'] ?? '#e5e7eb';
-                            $cardStyle = "background-color: {$cardBgColor}; color: {$cardTextColor}; border-color: {$cardBorderColor};";
+                            $cardShowBorder = $data['card_show_border'] ?? true;
+                            $cardShowShadow = $data['card_show_shadow'] ?? false;
+                            $borderClass = $cardShowBorder ? 'border' : 'border-0';
+                            $shadowClass = $cardShowShadow ? 'shadow-sm' : 'shadow-none';
+                            $cardStyle = "background-color: {$cardBgColor}; color: {$cardTextColor};";
+                            if ($cardShowBorder) {
+                                $cardStyle .= " border-color: {$cardBorderColor};";
+                            }
                             if ($cardBgImage) {
                                 $cardStyle .= "background-image: url('{$cardBgImage}'); background-size: cover; background-position: center;";
                             }
@@ -249,6 +268,13 @@
                             ];
                             $cardMaxWidth = $cardWidthMap[$cardWidthKey] ?? $cardWidthMap['max-w-lg'];
                             $iconSize = $data['icon_size'] ?? 'h-16 w-16';
+                            $iconSizePxMap = [
+                                'h-12 w-12' => '64px',
+                                'h-16 w-16' => '96px',
+                                'h-20 w-20' => '128px',
+                                'h-24 w-24' => '160px',
+                            ];
+                            $iconSizePx = $iconSizePxMap[$iconSize] ?? '96px';
                             $ceremonyTitleFontFamily = $data['title_font_family'] ?? $fontFamily;
                             $ceremonyTitleTextSize = $data['title_text_size'] ?? 'text-2xl';
                             $ceremonyTitleColor = $data['title_color'] ?? $cardTextColor;
@@ -271,11 +297,11 @@
                             $buttonBackgroundColor = $data['button_background_color'] ?? '#111827';
                             $buttonFontSize = $sizeScale[$buttonTextSize] ?? $sizeScale['text-base'];
                         @endphp
-                        <div class="text-center mx-auto border rounded-lg p-8 shadow-sm {{ $textSize }}" style="{{ $cardStyle }} max-width: {{ $cardMaxWidth }};">
+                        <div class="text-center mx-auto rounded-lg p-8 {{ $shadowClass }} {{ $borderClass }} {{ $textSize }}" style="{{ $cardStyle }} max-width: {{ $cardMaxWidth }};">
                             @if(isset($data['icon_image']) && $data['icon_image'])
-                                <img src="{{ url('uploads/' . $data['icon_image']) }}" class="{{ $iconSize }} mx-auto mb-4 object-contain">
+                                <img src="{{ url('uploads/' . $data['icon_image']) }}" class="mx-auto mb-4 object-contain" style="width: {{ $iconSizePx }}; height: {{ $iconSizePx }};">
                             @else
-                                <x-icon name="{{ $data['icon'] ?? 'heroicon-o-home' }}" class="{{ $iconSize }} mx-auto mb-4 opacity-80" />
+                                <x-icon name="{{ $data['icon'] ?? 'heroicon-o-home' }}" class="mx-auto mb-4 opacity-80" style="width: {{ $iconSizePx }}; height: {{ $iconSizePx }};" />
                             @endif
                             
                             <h3 class="font-bold mb-4" style="font-family: '{{ $ceremonyTitleFontFamily }}', serif; font-size: {{ $ceremonyTitleFontSize }}; color: {{ $ceremonyTitleColor }};">
@@ -319,7 +345,14 @@
                             $cardBgImage = isset($data['card_background_image']) ? url('uploads/' . $data['card_background_image']) : null;
                             $cardTextColor = $data['card_text_color'] ?? $textColor;
                             $cardBorderColor = $data['card_border_color'] ?? '#e5e7eb';
-                            $cardStyle = "background-color: {$cardBgColor}; color: {$cardTextColor}; border-color: {$cardBorderColor};";
+                            $cardShowBorder = $data['card_show_border'] ?? true;
+                            $cardShowShadow = $data['card_show_shadow'] ?? false;
+                            $borderClass = $cardShowBorder ? 'border' : 'border-0';
+                            $shadowClass = $cardShowShadow ? 'shadow-sm' : 'shadow-none';
+                            $cardStyle = "background-color: {$cardBgColor}; color: {$cardTextColor};";
+                            if ($cardShowBorder) {
+                                $cardStyle .= " border-color: {$cardBorderColor};";
+                            }
                             if ($cardBgImage) {
                                 $cardStyle .= "background-image: url('{$cardBgImage}'); background-size: cover; background-position: center;";
                             }
@@ -332,6 +365,13 @@
                             ];
                             $cardMaxWidth = $cardWidthMap[$cardWidthKey] ?? $cardWidthMap['max-w-lg'];
                             $iconSize = $data['icon_size'] ?? 'h-16 w-16';
+                            $iconSizePxMap = [
+                                'h-12 w-12' => '64px',
+                                'h-16 w-16' => '96px',
+                                'h-20 w-20' => '128px',
+                                'h-24 w-24' => '160px',
+                            ];
+                            $iconSizePx = $iconSizePxMap[$iconSize] ?? '96px';
                             $receptionTitleFontFamily = $data['title_font_family'] ?? $fontFamily;
                             $receptionTitleTextSize = $data['title_text_size'] ?? 'text-2xl';
                             $receptionTitleColor = $data['title_color'] ?? $cardTextColor;
@@ -354,11 +394,11 @@
                             $receptionButtonBackgroundColor = $data['button_background_color'] ?? '#111827';
                             $receptionButtonFontSize = $sizeScale[$receptionButtonTextSize] ?? $sizeScale['text-base'];
                         @endphp
-                        <div class="text-center mx-auto border rounded-lg p-8 shadow-sm {{ $textSize }}" style="{{ $cardStyle }} max-width: {{ $cardMaxWidth }};">
+                        <div class="text-center mx-auto rounded-lg p-8 {{ $shadowClass }} {{ $borderClass }} {{ $textSize }}" style="{{ $cardStyle }} max-width: {{ $cardMaxWidth }};">
                             @if(isset($data['icon_image']) && $data['icon_image'])
-                                <img src="{{ url('uploads/' . $data['icon_image']) }}" class="{{ $iconSize }} mx-auto mb-4 object-contain">
+                                <img src="{{ url('uploads/' . $data['icon_image']) }}" class="mx-auto mb-4 object-contain" style="width: {{ $iconSizePx }}; height: {{ $iconSizePx }};">
                             @else
-                                <x-icon name="{{ $data['icon'] ?? 'heroicon-o-musical-note' }}" class="{{ $iconSize }} mx-auto mb-4 opacity-80" />
+                                <x-icon name="{{ $data['icon'] ?? 'heroicon-o-musical-note' }}" class="mx-auto mb-4 opacity-80" style="width: {{ $iconSizePx }}; height: {{ $iconSizePx }};" />
                             @endif
                             
                             <h3 class="font-bold mb-4" style="font-family: '{{ $receptionTitleFontFamily }}', serif; font-size: {{ $receptionTitleFontSize }}; color: {{ $receptionTitleColor }};">
@@ -404,20 +444,36 @@
                             $contentTextSize = $data['content_text_size'] ?? $textSize;
                             $titleColor = $data['title_color'] ?? $textColor;
                             $contentColor = $data['content_color'] ?? $textColor;
+                            $subtitleFontFamily = $data['subtitle_font_family'] ?? $contentFontFamily;
+                            $subtitleTextSize = $data['subtitle_text_size'] ?? $contentTextSize;
+                            $subtitleColor = $data['subtitle_color'] ?? $contentColor;
                             $iconSize = $data['icon_size'] ?? 'h-16 w-16';
+                            $iconSizePxMap = [
+                                'h-12 w-12' => '64px',
+                                'h-16 w-16' => '96px',
+                                'h-20 w-20' => '128px',
+                                'h-24 w-24' => '160px',
+                            ];
+                            $iconSizePx = $iconSizePxMap[$iconSize] ?? '96px';
                             $titleFontSize = $sizeScale[$titleTextSize] ?? $sizeScale['text-xl'];
                             $contentFontSize = $sizeScale[$contentTextSize] ?? $sizeScale['text-lg'];
+                            $subtitleFontSize = $sizeScale[$subtitleTextSize] ?? $sizeScale['text-lg'];
                         @endphp
                         <div class="text-center max-w-2xl mx-auto">
                             @if(isset($data['image']) && $data['image'])
-                                <img src="{{ url('uploads/' . $data['image']) }}" class="{{ $iconSize }} mx-auto mb-4 object-contain">
+                                <img src="{{ url('uploads/' . $data['image']) }}" class="mx-auto mb-4 object-contain" style="width: {{ $iconSizePx }}; height: {{ $iconSizePx }};">
                             @else
-                                <x-icon name="{{ $data['icon'] ?? 'heroicon-o-user' }}" class="{{ $iconSize }} mx-auto mb-4 opacity-80" />
+                                <x-icon name="{{ $data['icon'] ?? 'heroicon-o-user' }}" class="mx-auto mb-4 opacity-80" style="width: {{ $iconSizePx }}; height: {{ $iconSizePx }};" />
                             @endif
                             
-                            <h4 class="font-bold mb-4 uppercase tracking-wide" style="font-family: '{{ $titleFontFamily }}', serif; font-size: {{ $titleFontSize }}; color: {{ $titleColor }};">
+                            <h4 class="font-bold mb-2 uppercase tracking-wide" style="font-family: '{{ $titleFontFamily }}', serif; font-size: {{ $titleFontSize }}; color: {{ $titleColor }};">
                                 {{ $data['title'] }}
                             </h4>
+                            @if(!empty($data['subtitle']))
+                                <p class="mb-4" style="font-family: '{{ $subtitleFontFamily }}', serif; font-size: {{ $subtitleFontSize }}; color: {{ $subtitleColor }};">
+                                    {{ $data['subtitle'] }}
+                                </p>
+                            @endif
                             <p class="whitespace-pre-line" style="font-family: '{{ $contentFontFamily }}', serif; font-size: {{ $contentFontSize }}; color: {{ $contentColor }};">
                                 {{ $data['content'] }}
                             </p>
@@ -437,15 +493,22 @@
                             $descriptionColor = $data['description_color'] ?? $textColor;
                             $linkColor = $data['link_color'] ?? $textColor;
                             $iconSize = $data['icon_size'] ?? 'h-16 w-16';
+                            $iconSizePxMap = [
+                                'h-12 w-12' => '64px',
+                                'h-16 w-16' => '96px',
+                                'h-20 w-20' => '128px',
+                                'h-24 w-24' => '160px',
+                            ];
+                            $iconSizePx = $iconSizePxMap[$iconSize] ?? '96px';
                             $titleFontSize = $sizeScale[$titleTextSize] ?? $sizeScale['text-xl'];
                             $descriptionFontSize = $sizeScale[$descriptionTextSize] ?? $sizeScale['text-lg'];
                             $linkFontSize = $sizeScale[$linkTextSize] ?? $sizeScale['text-lg'];
                         @endphp
                         <div class="text-center max-w-2xl mx-auto">
                             @if(isset($data['image']) && $data['image'])
-                                <img src="{{ url('uploads/' . $data['image']) }}" class="{{ $iconSize }} mx-auto mb-4 object-contain">
+                                <img src="{{ url('uploads/' . $data['image']) }}" class="mx-auto mb-4 object-contain" style="width: {{ $iconSizePx }}; height: {{ $iconSizePx }};">
                             @else
-                                <x-icon name="{{ $data['icon'] ?? 'heroicon-o-gift' }}" class="{{ $iconSize }} mx-auto mb-4 opacity-80" />
+                                <x-icon name="{{ $data['icon'] ?? 'heroicon-o-gift' }}" class="mx-auto mb-4 opacity-80" style="width: {{ $iconSizePx }}; height: {{ $iconSizePx }};" />
                             @endif
                             
                             <h4 class="font-bold mb-4 uppercase tracking-wide" style="font-family: '{{ $titleFontFamily }}', serif; font-size: {{ $titleFontSize }}; color: {{ $titleColor }};">
@@ -456,10 +519,14 @@
                                     {{ $data['description'] }}
                                 </p>
                             @endif
-                            @if(!empty($data['link']) && !empty($data['link_image']))
-                                <a href="{{ $data['link'] }}" target="_blank" class="inline-block">
+                            @if(!empty($data['link_image']))
+                                @if(!empty($data['link']))
+                                    <a href="{{ $data['link'] }}" target="_blank" class="inline-block">
+                                        <img src="{{ url('uploads/' . $data['link_image']) }}" class="mx-auto mb-4 max-w-xs rounded-lg shadow-md object-contain">
+                                    </a>
+                                @else
                                     <img src="{{ url('uploads/' . $data['link_image']) }}" class="mx-auto mb-4 max-w-xs rounded-lg shadow-md object-contain">
-                                </a>
+                                @endif
                             @elseif(!empty($data['link']))
                                 <a href="{{ $data['link'] }}" target="_blank" class="hover:underline font-semibold" style="font-family: '{{ $linkFontFamily }}', serif; font-size: {{ $linkFontSize }}; color: {{ $linkColor }};">
                                     {{ $data['link_text'] }}
@@ -478,14 +545,22 @@
                             $titleColor = $data['title_color'] ?? $textColor;
                             $hashtagColor = $data['hashtag_color'] ?? $textColor;
                             $iconSize = $data['icon_size'] ?? 'h-16 w-16';
+                            $iconSizePxMap = [
+                                'h-12 w-12' => '64px',
+                                'h-16 w-16' => '96px',
+                                'h-20 w-20' => '128px',
+                                'h-24 w-24' => '160px',
+                                'h-32 w-32' => '200px',
+                            ];
+                            $iconSizePx = $iconSizePxMap[$iconSize] ?? '96px';
                             $titleFontSize = $sizeScale[$titleTextSize] ?? $sizeScale['text-xl'];
                             $hashtagFontSize = $sizeScale[$hashtagTextSize] ?? $sizeScale['text-xl'];
                         @endphp
                         <div class="text-center max-w-2xl mx-auto">
                             @if(isset($data['image']) && $data['image'])
-                                <img src="{{ url('uploads/' . $data['image']) }}" class="{{ $iconSize }} mx-auto mb-4 object-contain">
+                                <img src="{{ url('uploads/' . $data['image']) }}" class="mx-auto mb-4 object-contain" style="width: {{ $iconSizePx }}; height: {{ $iconSizePx }};">
                             @else
-                                <x-icon name="{{ $data['icon'] ?? 'heroicon-o-camera' }}" class="{{ $iconSize }} mx-auto mb-4 opacity-80" />
+                                <x-icon name="{{ $data['icon'] ?? 'heroicon-o-camera' }}" class="mx-auto mb-4 opacity-80" style="width: {{ $iconSizePx }}; height: {{ $iconSizePx }};" />
                             @endif
                             
                             <h4 class="font-bold mb-4 uppercase tracking-wide" style="font-family: '{{ $titleFontFamily }}', serif; font-size: {{ $titleFontSize }}; color: {{ $titleColor }};">
@@ -499,18 +574,38 @@
 
                     {{-- BLOCK: CUSTOM CONTENT --}}
                     @if($type === 'custom_content')
+                        @php
+                            $mediaWidthKey = $data['media_width'] ?? 'max-w-lg';
+                            $mediaWidthMap = [
+                                'max-w-sm' => '320px',
+                                'max-w-md' => '480px',
+                                'max-w-lg' => '640px',
+                                'max-w-xl' => '800px',
+                                'max-w-2xl' => '960px',
+                                'full' => '100%',
+                            ];
+                            $mediaMaxWidth = $mediaWidthMap[$mediaWidthKey] ?? '640px';
+                            $mediaFullBleed = (bool) ($data['media_full_bleed'] ?? false);
+                            // Use CSS calc to break out of container padding reliably
+                            $mediaWrapperClass = $mediaFullBleed ? '' : 'mx-auto';
+                            $mediaWrapperStyle = $mediaFullBleed
+                                ? 'width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);'
+                                : 'max-width:'.$mediaMaxWidth.';';
+                            $mediaStyle = 'width:100%;height:auto;';
+                            $mediaRadiusShadowClass = $mediaFullBleed ? '' : 'rounded-lg shadow-md';
+                        @endphp
                         <div class="text-center max-w-4xl mx-auto {{ $textSize }}" style="color: {{ $textColor }}">
                             @if(isset($data['image']) && $data['image'])
-                                <div class="mb-8">
-                                    <img src="{{ url('uploads/' . $data['image']) }}" class="mx-auto max-w-xs md:max-w-md rounded-lg shadow-md object-contain">
+                                <div class="mb-8 {{ $mediaWrapperClass }}" style="{{ $mediaWrapperStyle }}">
+                                    <img src="{{ url('uploads/' . $data['image']) }}" class="object-contain {{ $mediaRadiusShadowClass }}" style="{{ $mediaStyle }}">
                                 </div>
                             @endif
                             <div class="prose mx-auto">
                                 {!! $data['content'] !!}
                             </div>
                             @if(isset($data['video']) && $data['video'])
-                                <div class="mt-8">
-                                    <video class="mx-auto max-w-full rounded-lg shadow-lg" controls playsinline>
+                                <div class="mt-8 {{ $mediaWrapperClass }}" style="{{ $mediaWrapperStyle }}">
+                                    <video class="{{ $mediaRadiusShadowClass }}" controls playsinline style="{{ $mediaStyle }}">
                                         <source src="{{ url('uploads/' . $data['video']) }}">
                                     </video>
                                 </div>
@@ -527,10 +622,31 @@
                             $rsvpDescriptionFontFamily = $data['description_font_family'] ?? $fontFamily;
                             $rsvpDescriptionTextSize = $data['description_text_size'] ?? $textSize;
                             $rsvpDescriptionColor = $data['description_color'] ?? $textColor;
+                            $rsvpFormFontFamily = $data['form_font_family'] ?? $fontFamily;
+                            $rsvpFormTextSize = $data['form_text_size'] ?? 'text-base';
+                            $rsvpFormTextColor = $data['form_text_color'] ?? '#111827';
+                            $rsvpInputBorderColor = $data['input_border_color'] ?? '#d1d5db';
+                            $rsvpButtonFontFamily = $data['button_font_family'] ?? $fontFamily;
+                            $rsvpButtonTextSize = $data['button_text_size'] ?? 'text-base';
+                            $rsvpButtonTextColor = $data['button_text_color'] ?? '#ffffff';
+                            $rsvpButtonBackgroundColor = $data['button_background_color'] ?? '#2563eb';
+                            $rsvpWhatsappButtonTextColor = $data['whatsapp_button_text_color'] ?? '#ffffff';
+                            $rsvpWhatsappButtonBackgroundColor = $data['whatsapp_button_background_color'] ?? '#22c55e';
+                            $rsvpFormWidthKey = $data['form_width'] ?? 'md';
+                            $rsvpFormWidthMap = [
+                                'sm' => '320px',
+                                'md' => '480px',
+                                'lg' => '640px',
+                                'xl' => '800px',
+                                'full' => '100%',
+                            ];
+                            $rsvpFormMaxWidth = $rsvpFormWidthMap[$rsvpFormWidthKey] ?? '480px';
                             $rsvpTitleFontSize = $sizeScale[$rsvpTitleTextSize] ?? $sizeScale['text-xl'];
                             $rsvpDescriptionFontSize = $sizeScale[$rsvpDescriptionTextSize] ?? $sizeScale['text-lg'];
+                            $rsvpFormFontSize = $sizeScale[$rsvpFormTextSize] ?? '1rem';
+                            $rsvpButtonFontSize = $sizeScale[$rsvpButtonTextSize] ?? '1rem';
                         @endphp
-                        <div class="text-center max-w-2xl mx-auto {{ $textSize }}">
+                        <div class="text-center mx-auto {{ $textSize }}" style="max-width: {{ $rsvpFormMaxWidth }};">
                             <h2 class="font-bold mb-8" style="font-family: '{{ $rsvpTitleFontFamily }}', serif; font-size: {{ $rsvpTitleFontSize }}; color: {{ $rsvpTitleColor }};">
                                 {{ $data['title'] }}
                             </h2>
@@ -538,28 +654,48 @@
                                 {{ $data['description'] }}
                             </p>
 
-                            <div class="max-w-md mx-auto text-left">
+                            <div class="mx-auto text-left">
                                 <form action="{{ route('invitation.rsvp', $invitation->slug) }}" method="POST" class="space-y-4">
                                     @csrf
                                     <div>
-                                        <label class="block text-left text-sm font-bold mb-2">Nombre Completo</label>
-                                        <input type="text" name="name" required class="w-full border rounded px-3 py-2">
+                                        <label class="block text-left mb-2" style="font-family: '{{ $rsvpFormFontFamily }}', serif; font-size: {{ $rsvpFormFontSize }}; color: {{ $rsvpFormTextColor }};">
+                                            Nombre Completo
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            required
+                                            class="w-full rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-offset-0"
+                                            style="border: 1px solid {{ $rsvpInputBorderColor }}; font-family: '{{ $rsvpFormFontFamily }}', serif; font-size: {{ $rsvpFormFontSize }}; color: {{ $rsvpFormTextColor }};"
+                                        >
                                     </div>
                                     <div>
-                                        <label class="block text-left text-sm font-bold mb-2">Número de Personas</label>
-                                        <input type="number" name="guests" min="1" required class="w-full border rounded px-3 py-2">
+                                        <label class="block text-left mb-2" style="font-family: '{{ $rsvpFormFontFamily }}', serif; font-size: {{ $rsvpFormFontSize }}; color: {{ $rsvpFormTextColor }};">
+                                            Mensaje para confirmar
+                                        </label>
+                                        <textarea
+                                            name="message"
+                                            rows="3"
+                                            class="w-full rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-offset-0"
+                                            style="border: 1px solid {{ $rsvpInputBorderColor }}; font-family: '{{ $rsvpFormFontFamily }}', serif; font-size: {{ $rsvpFormFontSize }}; color: {{ $rsvpFormTextColor }};"
+                                        ></textarea>
                                     </div>
-                                    <div>
-                                        <label class="block text-left text-sm font-bold mb-2">Mensaje (Opcional)</label>
-                                        <textarea name="message" rows="3" class="w-full border rounded px-3 py-2"></textarea>
-                                    </div>
-                                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700 transition">
+                                    <button
+                                        type="submit"
+                                        class="w-full rounded hover:opacity-90 transition"
+                                        style="font-family: '{{ $rsvpButtonFontFamily }}', serif; font-size: {{ $rsvpButtonFontSize }}; color: {{ $rsvpButtonTextColor }}; background-color: {{ $rsvpButtonBackgroundColor }}; padding-top: 0.75rem; padding-bottom: 0.75rem;"
+                                    >
                                         Enviar Confirmación
                                     </button>
                                 </form>
 
                                 @if($invitation->whatsapp_number)
-                                    <a href="https://wa.me/{{ $invitation->whatsapp_number }}?text=Hola,%20quiero%20confirmar%20mi%20asistencia%20al%20evento%20{{ $invitation->category->name }}" target="_blank" class="mt-4 inline-flex justify-center w-full bg-green-500 text-white px-8 py-3 rounded-full text-lg font-bold hover:bg-green-600 transition shadow-lg">
+                                    <a
+                                        href="https://wa.me/{{ $invitation->whatsapp_number }}?text=Hola,%20quiero%20confirmar%20mi%20asistencia%20al%20evento%20{{ $invitation->category->name }}"
+                                        target="_blank"
+                                        class="mt-4 inline-flex justify-center w-full rounded-full hover:opacity-90 transition shadow-lg"
+                                        style="font-family: '{{ $rsvpButtonFontFamily }}', serif; font-size: {{ $rsvpButtonFontSize }}; color: {{ $rsvpWhatsappButtonTextColor }}; background-color: {{ $rsvpWhatsappButtonBackgroundColor }}; padding-top: 0.75rem; padding-bottom: 0.75rem;"
+                                    >
                                         Confirmar por WhatsApp
                                     </a>
                                 @endif

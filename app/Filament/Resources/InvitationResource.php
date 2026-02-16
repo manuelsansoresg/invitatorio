@@ -39,6 +39,28 @@ class InvitationResource extends Resource
                     'py-32' => 'Extra Grande',
                 ])
                 ->default('py-16'),
+            Forms\Components\Select::make('margin_top')
+                ->label('Margen Superior')
+                ->options([
+                    'none' => 'Sin margen',
+                    'xs' => 'Muy pequeño',
+                    'sm' => 'Pequeño',
+                    'md' => 'Medio',
+                    'lg' => 'Grande',
+                    'xl' => 'Extra grande',
+                ])
+                ->default('md'),
+            Forms\Components\Select::make('margin_bottom')
+                ->label('Margen Inferior')
+                ->options([
+                    'none' => 'Sin margen',
+                    'xs' => 'Muy pequeño',
+                    'sm' => 'Pequeño',
+                    'md' => 'Medio',
+                    'lg' => 'Grande',
+                    'xl' => 'Extra grande',
+                ])
+                ->default('md'),
         ];
     }
 
@@ -73,6 +95,7 @@ class InvitationResource extends Resource
             'h-16 w-16' => 'Mediano',
             'h-20 w-20' => 'Grande',
             'h-24 w-24' => 'Extra grande',
+            'h-32 w-32' => 'XXL',
         ];
     }
 
@@ -350,6 +373,10 @@ class InvitationResource extends Resource
                                                                             'max-w-xl' => 'Muy ancho',
                                                                         ])
                                                                         ->default('max-w-lg'),
+                                                                    Forms\Components\Toggle::make('card_show_border')
+                                                                        ->label('Mostrar Borde')
+                                                                        ->default(true)
+                                                                        ->live(),
                                                                     Forms\Components\FileUpload::make('card_background_image')
                                                                         ->label('Imagen de Fondo Tarjeta (Opcional)')
                                                                         ->image()
@@ -361,7 +388,13 @@ class InvitationResource extends Resource
                                                                         ->default('#1f2937'),
                                                                     Forms\Components\ColorPicker::make('card_border_color')
                                                                         ->label('Color de Borde Tarjeta')
-                                                                        ->default('#e5e7eb'),
+                                                                        ->default('#e5e7eb')
+                                                                        ->disabled(fn (Get $get): bool => ! (bool) $get('card_show_border'))
+                                                                        ->live(),
+                                                                    Forms\Components\Toggle::make('card_show_shadow')
+                                                                        ->label('Mostrar Sombra')
+                                                                        ->default(false)
+                                                                        ->live(),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Tipografía')
                                                                 ->schema([
@@ -537,6 +570,10 @@ class InvitationResource extends Resource
                                                                             'max-w-xl' => 'Muy ancho',
                                                                         ])
                                                                         ->default('max-w-lg'),
+                                                                    Forms\Components\Toggle::make('card_show_border')
+                                                                        ->label('Mostrar Borde')
+                                                                        ->default(true)
+                                                                        ->live(),
                                                                     Forms\Components\FileUpload::make('card_background_image')
                                                                         ->label('Imagen de Fondo Tarjeta (Opcional)')
                                                                         ->image()
@@ -548,7 +585,13 @@ class InvitationResource extends Resource
                                                                         ->default('#1f2937'),
                                                                     Forms\Components\ColorPicker::make('card_border_color')
                                                                         ->label('Color de Borde Tarjeta')
-                                                                        ->default('#e5e7eb'),
+                                                                        ->default('#e5e7eb')
+                                                                        ->disabled(fn (Get $get): bool => ! (bool) $get('card_show_border'))
+                                                                        ->live(),
+                                                                    Forms\Components\Toggle::make('card_show_shadow')
+                                                                        ->label('Mostrar Sombra')
+                                                                        ->default(false)
+                                                                        ->live(),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Tipografía')
                                                                 ->schema([
@@ -665,6 +708,8 @@ class InvitationResource extends Resource
                                                         Forms\Components\TextInput::make('title')
                                                             ->label('Título')
                                                             ->default('Código de Vestimenta'),
+                                                        Forms\Components\TextInput::make('subtitle')
+                                                            ->label('Subtítulo'),
                                                         Forms\Components\Textarea::make('content')
                                                             ->label('Descripción')
                                                             ->rows(3),
@@ -716,6 +761,32 @@ class InvitationResource extends Resource
                                                                         'Vista previa título',
                                                                         'Título de ejemplo',
                                                                         'title'
+                                                                    ),
+                                                                ]),
+                                                            Forms\Components\Fieldset::make('Subtítulo')
+                                                                ->schema([
+                                                                    Forms\Components\Select::make('subtitle_font_family')
+                                                                        ->label('Tipografía Subtítulo')
+                                                                        ->options(self::getFontOptions())
+                                                                        ->default('Lato')
+                                                                        ->live(),
+                                                                    Forms\Components\Select::make('subtitle_text_size')
+                                                                        ->label('Tamaño Subtítulo')
+                                                                        ->options(self::getSizeOptions())
+                                                                        ->default('text-lg')
+                                                                        ->live(),
+                                                                    Forms\Components\ColorPicker::make('subtitle_color')
+                                                                        ->label('Color Subtítulo')
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'dress_code_subtitle_preview',
+                                                                        'subtitle_font_family',
+                                                                        'subtitle_text_size',
+                                                                        'subtitle_color',
+                                                                        'Vista previa subtítulo',
+                                                                        'Subtítulo de ejemplo',
+                                                                        'subtitle'
                                                                     ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Descripción')
@@ -1000,7 +1071,31 @@ class InvitationResource extends Resource
                                                             ->visibility('public'),
                                                     ]),
                                                 Forms\Components\Tabs\Tab::make('Diseño')
-                                                    ->schema(self::getDesignSchema()),
+                                                    ->schema(array_merge(
+                                                        self::getDesignSchema(),
+                                                        [
+                                                            Forms\Components\Fieldset::make('Multimedia')
+                                                                ->schema([
+                                                                    Forms\Components\Select::make('media_width')
+                                                                        ->label('Ancho de multimedia')
+                                                                        ->options([
+                                                                            'max-w-sm' => 'Estrecho',
+                                                                            'max-w-md' => 'Mediano',
+                                                                            'max-w-lg' => 'Ancho',
+                                                                            'max-w-xl' => 'Muy ancho',
+                                                                            'max-w-2xl' => 'Extra ancho',
+                                                                            'full' => 'Ancho completo (contenedor)',
+                                                                        ])
+                                                                        ->default('max-w-lg')
+                                                                        ->live(),
+                                                                    Forms\Components\Toggle::make('media_full_bleed')
+                                                                        ->label('Ancho total entre secciones (full-bleed)')
+                                                                        ->helperText('Ocupa todo el ancho del viewport, ignorando márgenes laterales del contenedor.')
+                                                                        ->default(false)
+                                                                        ->live(),
+                                                                ]),
+                                                        ]
+                                                    )),
                                             ]),
                                     ]),
 
@@ -1073,6 +1168,67 @@ class InvitationResource extends Resource
                                                                         'Texto de ejemplo',
                                                                         'description'
                                                                     ),
+                                                                ]),
+                                                            Forms\Components\Fieldset::make('Formulario')
+                                                                ->schema([
+                                                                    Forms\Components\Select::make('form_font_family')
+                                                                        ->label('Tipografía formulario')
+                                                                        ->options(self::getFontOptions())
+                                                                        ->default('Lato')
+                                                                        ->live(),
+                                                                    Forms\Components\Select::make('form_text_size')
+                                                                        ->label('Tamaño texto formulario')
+                                                                        ->options(self::getSizeOptions())
+                                                                        ->default('text-base')
+                                                                        ->live(),
+                                                                    Forms\Components\ColorPicker::make('form_text_color')
+                                                                        ->label('Color texto formulario')
+                                                                        ->default('#111827')
+                                                                        ->live(),
+                                                                    Forms\Components\ColorPicker::make('input_border_color')
+                                                                        ->label('Color borde inputs')
+                                                                        ->default('#d1d5db')
+                                                                        ->live(),
+                                                                    Forms\Components\Select::make('form_width')
+                                                                        ->label('Ancho del bloque (título + formulario + botones)')
+                                                                        ->options([
+                                                                            'sm' => 'Estrecho',
+                                                                            'md' => 'Normal',
+                                                                            'lg' => 'Ancho',
+                                                                            'xl' => 'Muy ancho',
+                                                                            'full' => 'Completo',
+                                                                        ])
+                                                                        ->default('md')
+                                                                        ->live(),
+                                                                ]),
+                                                            Forms\Components\Fieldset::make('Botones')
+                                                                ->schema([
+                                                                    Forms\Components\Select::make('button_font_family')
+                                                                        ->label('Tipografía botones')
+                                                                        ->options(self::getFontOptions())
+                                                                        ->default('Lato')
+                                                                        ->live(),
+                                                                    Forms\Components\Select::make('button_text_size')
+                                                                        ->label('Tamaño texto botones')
+                                                                        ->options(self::getSizeOptions())
+                                                                        ->default('text-base')
+                                                                        ->live(),
+                                                                    Forms\Components\ColorPicker::make('button_text_color')
+                                                                        ->label('Color texto botón principal')
+                                                                        ->default('#ffffff')
+                                                                        ->live(),
+                                                                    Forms\Components\ColorPicker::make('button_background_color')
+                                                                        ->label('Color fondo botón principal')
+                                                                        ->default('#2563eb')
+                                                                        ->live(),
+                                                                    Forms\Components\ColorPicker::make('whatsapp_button_text_color')
+                                                                        ->label('Color texto botón WhatsApp')
+                                                                        ->default('#ffffff')
+                                                                        ->live(),
+                                                                    Forms\Components\ColorPicker::make('whatsapp_button_background_color')
+                                                                        ->label('Color fondo botón WhatsApp')
+                                                                        ->default('#22c55e')
+                                                                        ->live(),
                                                                 ]),
                                                         ]
                                                     )),
