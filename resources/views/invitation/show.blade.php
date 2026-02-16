@@ -110,6 +110,19 @@
             letter-spacing: 0.1em;
             font-weight: 600;
         }
+        .prose img {
+            max-width: 320px;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .prose figure {
+            margin: 0 auto 1rem auto;
+        }
+        .prose figure > figcaption {
+            display: none;
+        }
     </style>
     <!-- Import Google Fonts dynamically if needed -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">
@@ -428,8 +441,15 @@
 
                     {{-- BLOCK: CUSTOM CONTENT --}}
                     @if($type === 'custom_content')
-                        <div class="text-center max-w-4xl mx-auto prose {{ $textSize }}" style="color: {{ $textColor }}">
-                            {!! $data['content'] !!}
+                        <div class="text-center max-w-4xl mx-auto {{ $textSize }}" style="color: {{ $textColor }}">
+                            @if(isset($data['image']) && $data['image'])
+                                <div class="mb-8">
+                                    <img src="{{ url('uploads/' . $data['image']) }}" class="mx-auto max-w-xs md:max-w-md rounded-lg shadow-md object-contain">
+                                </div>
+                            @endif
+                            <div class="prose mx-auto">
+                                {!! $data['content'] !!}
+                            </div>
                             @if(isset($data['video']) && $data['video'])
                                 <div class="mt-8">
                                     <video class="mx-auto max-w-full rounded-lg shadow-lg" controls playsinline>

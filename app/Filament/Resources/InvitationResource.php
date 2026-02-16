@@ -6,9 +6,11 @@ use App\Filament\Resources\InvitationResource\Pages;
 use App\Models\Invitation;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 
 class InvitationResource extends Resource
 {
@@ -72,6 +74,38 @@ class InvitationResource extends Resource
             'h-20 w-20' => 'Grande',
             'h-24 w-24' => 'Extra grande',
         ];
+    }
+
+    public static function mapSizeToRem(?string $size): string
+    {
+        $scale = [
+            'text-base' => '1.25rem',
+            'text-lg' => '1.5rem',
+            'text-xl' => '2.4rem',
+            'text-2xl' => '3.6rem',
+        ];
+
+        return $scale[$size] ?? $scale['text-lg'];
+    }
+
+    public static function makeTypographyPreview(string $name, string $fontField, string $sizeField, ?string $colorField = null, string $label = 'Vista previa', string $sample = 'Aa Bb Cc 123'): Forms\Components\Placeholder
+    {
+        return Forms\Components\Placeholder::make($name)
+            ->label($label)
+            ->content(function (Get $get) use ($fontField, $sizeField, $colorField, $sample): HtmlString {
+                $fontFamily = $get($fontField) ?: 'Playfair Display';
+                $sizeKey = $get($sizeField) ?: 'text-lg';
+                $color = $colorField ? ($get($colorField) ?: '#111827') : '#111827';
+                $fontSize = self::mapSizeToRem($sizeKey);
+
+                return new HtmlString(
+                    '<div style="padding:0.25rem 0; font-family:\''.e($fontFamily).'\', serif; font-size:'.e($fontSize).'; color:'.e($color).';">'.
+                    e($sample).
+                    '</div>'
+                );
+            })
+            ->reactive()
+            ->columnSpanFull();
     }
 
     public static function getFontOptions(): array
@@ -185,28 +219,50 @@ class InvitationResource extends Resource
                                                                     Forms\Components\Select::make('title_font_family')
                                                                         ->label('Tipografía Título')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Playfair Display'),
+                                                                        ->default('Playfair Display')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('title_text_size')
                                                                         ->label('Tamaño Título')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-2xl'),
+                                                                        ->default('text-2xl')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('title_color')
                                                                         ->label('Color Título')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'dedication_title_preview',
+                                                                        'title_font_family',
+                                                                        'title_text_size',
+                                                                        'title_color',
+                                                                        'Vista previa título',
+                                                                        'Título de ejemplo'
+                                                                    ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Texto')
                                                                 ->schema([
                                                                     Forms\Components\Select::make('body_font_family')
                                                                         ->label('Tipografía Texto')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Lato'),
+                                                                        ->default('Lato')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('body_text_size')
                                                                         ->label('Tamaño Texto')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-lg'),
+                                                                        ->default('text-lg')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('body_color')
                                                                         ->label('Color Texto')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'dedication_body_preview',
+                                                                        'body_font_family',
+                                                                        'body_text_size',
+                                                                        'body_color',
+                                                                        'Vista previa texto',
+                                                                        'Texto de ejemplo'
+                                                                    ),
                                                                 ]),
                                                         ]
                                                     )),
@@ -276,25 +332,47 @@ class InvitationResource extends Resource
                                                                     Forms\Components\Select::make('title_font_family')
                                                                         ->label('Tipografía Título')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Playfair Display'),
+                                                                        ->default('Playfair Display')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('title_text_size')
                                                                         ->label('Tamaño Título')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-2xl'),
+                                                                        ->default('text-2xl')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('title_color')
                                                                         ->label('Color Título')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'ceremony_title_preview',
+                                                                        'title_font_family',
+                                                                        'title_text_size',
+                                                                        'title_color',
+                                                                        'Vista previa título',
+                                                                        'Título de ejemplo'
+                                                                    ),
                                                                     Forms\Components\Select::make('content_font_family')
                                                                         ->label('Tipografía Contenido')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Lato'),
+                                                                        ->default('Lato')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('content_text_size')
                                                                         ->label('Tamaño Contenido')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-lg'),
+                                                                        ->default('text-lg')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('content_color')
                                                                         ->label('Color Contenido')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'ceremony_content_preview',
+                                                                        'content_font_family',
+                                                                        'content_text_size',
+                                                                        'content_color',
+                                                                        'Vista previa contenido',
+                                                                        'Texto de ejemplo'
+                                                                    ),
                                                                 ]),
                                                         ]
                                                     )),
@@ -364,25 +442,47 @@ class InvitationResource extends Resource
                                                                     Forms\Components\Select::make('title_font_family')
                                                                         ->label('Tipografía Título')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Playfair Display'),
+                                                                        ->default('Playfair Display')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('title_text_size')
                                                                         ->label('Tamaño Título')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-2xl'),
+                                                                        ->default('text-2xl')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('title_color')
                                                                         ->label('Color Título')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'reception_title_preview',
+                                                                        'title_font_family',
+                                                                        'title_text_size',
+                                                                        'title_color',
+                                                                        'Vista previa título',
+                                                                        'Título de ejemplo'
+                                                                    ),
                                                                     Forms\Components\Select::make('content_font_family')
                                                                         ->label('Tipografía Contenido')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Lato'),
+                                                                        ->default('Lato')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('content_text_size')
                                                                         ->label('Tamaño Contenido')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-lg'),
+                                                                        ->default('text-lg')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('content_color')
                                                                         ->label('Color Contenido')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'reception_content_preview',
+                                                                        'content_font_family',
+                                                                        'content_text_size',
+                                                                        'content_color',
+                                                                        'Vista previa contenido',
+                                                                        'Texto de ejemplo'
+                                                                    ),
                                                                 ]),
                                                         ]
                                                     )),
@@ -431,28 +531,50 @@ class InvitationResource extends Resource
                                                                     Forms\Components\Select::make('title_font_family')
                                                                         ->label('Tipografía Título')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Playfair Display'),
+                                                                        ->default('Playfair Display')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('title_text_size')
                                                                         ->label('Tamaño Título')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-2xl'),
+                                                                        ->default('text-2xl')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('title_color')
                                                                         ->label('Color Título')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'dress_code_title_preview',
+                                                                        'title_font_family',
+                                                                        'title_text_size',
+                                                                        'title_color',
+                                                                        'Vista previa título',
+                                                                        'Título de ejemplo'
+                                                                    ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Descripción')
                                                                 ->schema([
                                                                     Forms\Components\Select::make('content_font_family')
                                                                         ->label('Tipografía Descripción')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Lato'),
+                                                                        ->default('Lato')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('content_text_size')
                                                                         ->label('Tamaño Descripción')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-lg'),
+                                                                        ->default('text-lg')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('content_color')
                                                                         ->label('Color Descripción')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'dress_code_content_preview',
+                                                                        'content_font_family',
+                                                                        'content_text_size',
+                                                                        'content_color',
+                                                                        'Vista previa descripción',
+                                                                        'Texto de ejemplo'
+                                                                    ),
                                                                 ]),
                                                         ]
                                                     )),
@@ -512,42 +634,75 @@ class InvitationResource extends Resource
                                                                     Forms\Components\Select::make('title_font_family')
                                                                         ->label('Tipografía Título')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Playfair Display'),
+                                                                        ->default('Playfair Display')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('title_text_size')
                                                                         ->label('Tamaño Título')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-2xl'),
+                                                                        ->default('text-2xl')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('title_color')
                                                                         ->label('Color Título')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'gift_table_title_preview',
+                                                                        'title_font_family',
+                                                                        'title_text_size',
+                                                                        'title_color',
+                                                                        'Vista previa título',
+                                                                        'Título de ejemplo'
+                                                                    ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Descripción')
                                                                 ->schema([
                                                                     Forms\Components\Select::make('description_font_family')
                                                                         ->label('Tipografía Descripción')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Lato'),
+                                                                        ->default('Lato')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('description_text_size')
                                                                         ->label('Tamaño Descripción')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-lg'),
+                                                                        ->default('text-lg')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('description_color')
                                                                         ->label('Color Descripción')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'gift_table_description_preview',
+                                                                        'description_font_family',
+                                                                        'description_text_size',
+                                                                        'description_color',
+                                                                        'Vista previa descripción',
+                                                                        'Texto de ejemplo'
+                                                                    ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Link')
                                                                 ->schema([
                                                                     Forms\Components\Select::make('link_font_family')
                                                                         ->label('Tipografía Link')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Lato'),
+                                                                        ->default('Lato')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('link_text_size')
                                                                         ->label('Tamaño Link')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-lg'),
+                                                                        ->default('text-lg')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('link_color')
                                                                         ->label('Color Link')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'gift_table_link_preview',
+                                                                        'link_font_family',
+                                                                        'link_text_size',
+                                                                        'link_color',
+                                                                        'Vista previa link',
+                                                                        'Texto de ejemplo'
+                                                                    ),
                                                                 ]),
                                                         ]
                                                     )),
@@ -594,28 +749,50 @@ class InvitationResource extends Resource
                                                                     Forms\Components\Select::make('title_font_family')
                                                                         ->label('Tipografía Título')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Playfair Display'),
+                                                                        ->default('Playfair Display')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('title_text_size')
                                                                         ->label('Tamaño Título')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-2xl'),
+                                                                        ->default('text-2xl')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('title_color')
                                                                         ->label('Color Título')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'instagram_title_preview',
+                                                                        'title_font_family',
+                                                                        'title_text_size',
+                                                                        'title_color',
+                                                                        'Vista previa título',
+                                                                        'Comparte con Nosotros'
+                                                                    ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Hashtag')
                                                                 ->schema([
                                                                     Forms\Components\Select::make('hashtag_font_family')
                                                                         ->label('Tipografía Hashtag')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Lato'),
+                                                                        ->default('Lato')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('hashtag_text_size')
                                                                         ->label('Tamaño Hashtag')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-2xl'),
+                                                                        ->default('text-2xl')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('hashtag_color')
                                                                         ->label('Color Hashtag')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'instagram_hashtag_preview',
+                                                                        'hashtag_font_family',
+                                                                        'hashtag_text_size',
+                                                                        'hashtag_color',
+                                                                        'Vista previa hashtag',
+                                                                        '#hashtag'
+                                                                    ),
                                                                 ]),
                                                         ]
                                                     )),
@@ -631,6 +808,12 @@ class InvitationResource extends Resource
                                                     ->schema([
                                                         Forms\Components\RichEditor::make('content')
                                                             ->label('Contenido Libre'),
+                                                        Forms\Components\FileUpload::make('image')
+                                                            ->label('Imagen (Opcional)')
+                                                            ->image()
+                                                            ->disk('public_uploads')
+                                                            ->directory('invitations/custom')
+                                                            ->visibility('public'),
                                                         Forms\Components\FileUpload::make('video')
                                                             ->label('Video (Opcional)')
                                                             ->acceptedFileTypes([
@@ -671,28 +854,50 @@ class InvitationResource extends Resource
                                                                     Forms\Components\Select::make('title_font_family')
                                                                         ->label('Tipografía Título')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Playfair Display'),
+                                                                        ->default('Playfair Display')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('title_text_size')
                                                                         ->label('Tamaño Título')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-2xl'),
+                                                                        ->default('text-2xl')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('title_color')
                                                                         ->label('Color Título')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'rsvp_title_preview',
+                                                                        'title_font_family',
+                                                                        'title_text_size',
+                                                                        'title_color',
+                                                                        'Vista previa título',
+                                                                        'Confirmación de Asistencia'
+                                                                    ),
                                                                 ]),
                                                             Forms\Components\Fieldset::make('Descripción')
                                                                 ->schema([
                                                                     Forms\Components\Select::make('description_font_family')
                                                                         ->label('Tipografía Descripción')
                                                                         ->options(self::getFontOptions())
-                                                                        ->default('Lato'),
+                                                                        ->default('Lato')
+                                                                        ->live(),
                                                                     Forms\Components\Select::make('description_text_size')
                                                                         ->label('Tamaño Descripción')
                                                                         ->options(self::getSizeOptions())
-                                                                        ->default('text-lg'),
+                                                                        ->default('text-lg')
+                                                                        ->live(),
                                                                     Forms\Components\ColorPicker::make('description_color')
                                                                         ->label('Color Descripción')
-                                                                        ->default(null),
+                                                                        ->default(null)
+                                                                        ->live(),
+                                                                    self::makeTypographyPreview(
+                                                                        'rsvp_description_preview',
+                                                                        'description_font_family',
+                                                                        'description_text_size',
+                                                                        'description_color',
+                                                                        'Vista previa descripción',
+                                                                        'Texto de ejemplo'
+                                                                    ),
                                                                 ]),
                                                         ]
                                                     )),
