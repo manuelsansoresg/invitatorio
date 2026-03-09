@@ -95,22 +95,33 @@ class WeddingTemplate extends Component
         $this->locationButtonText = $this->templateModel->location_button_text ?? $this->locationButtonText;
         
         if ($this->templateModel->hero_image) {
-            $this->heroImage = filter_var($this->templateModel->hero_image, FILTER_VALIDATE_URL) 
-                ? $this->templateModel->hero_image 
-                : Storage::url($this->templateModel->hero_image);
+            $path = $this->templateModel->hero_image;
+            if (filter_var($path, FILTER_VALIDATE_URL)) {
+                $this->heroImage = $path;
+            } elseif (file_exists(public_path($path))) {
+                $this->heroImage = asset($path);
+            } else {
+                $this->heroImage = Storage::url($path);
+            }
         }
         
         if ($this->templateModel->story_image) {
-            $this->storyImage = filter_var($this->templateModel->story_image, FILTER_VALIDATE_URL) 
-                ? $this->templateModel->story_image 
-                : Storage::url($this->templateModel->story_image);
+            $path = $this->templateModel->story_image;
+            if (filter_var($path, FILTER_VALIDATE_URL)) {
+                $this->storyImage = $path;
+            } elseif (file_exists(public_path($path))) {
+                $this->storyImage = asset($path);
+            } else {
+                $this->storyImage = Storage::url($path);
+            }
         }
         
         if ($this->templateModel->gallery_images) {
-             $this->galleryImages = array_map(fn($path) => 
-                filter_var($path, FILTER_VALIDATE_URL) ? $path : Storage::url($path), 
-                $this->templateModel->gallery_images
-             );
+             $this->galleryImages = array_map(function($path) {
+                if (filter_var($path, FILTER_VALIDATE_URL)) return $path;
+                if (file_exists(public_path($path))) return asset($path);
+                return Storage::url($path);
+             }, $this->templateModel->gallery_images);
         }
 
         $this->storyTitle = $this->templateModel->story_title ?? $this->storyTitle;
@@ -178,12 +189,29 @@ class WeddingTemplate extends Component
         ];
 
         // Handle File Uploads
+        // Intentar determinar la ruta pública correcta (soporte para public_html en hostings compartidos)
+        $destinationPath = public_path('wedding-images');
+        
+        // Si la carpeta public no parece existir pero public_html sí, usar esa
+        if (!is_dir(public_path()) && is_dir(base_path('public_html'))) {
+            $destinationPath = base_path('public_html/wedding-images');
+        }
+
+        // Crear directorio si no existe
+        if (!file_exists($destinationPath)) {
+            @mkdir($destinationPath, 0755, true);
+        }
+
         if ($this->heroImage && !is_string($this->heroImage)) {
-             $data['hero_image'] = $this->heroImage->store('wedding-images', 'public');
+             $filename = $this->heroImage->hashName();
+             $this->heroImage->move($destinationPath, $filename);
+             $data['hero_image'] = 'wedding-images/' . $filename;
         }
 
         if ($this->storyImage && !is_string($this->storyImage)) {
-             $data['story_image'] = $this->storyImage->store('wedding-images', 'public');
+             $filename = $this->storyImage->hashName();
+             $this->storyImage->move($destinationPath, $filename);
+             $data['story_image'] = 'wedding-images/' . $filename;
         }
 
         // Handle Gallery Uploads
@@ -191,13 +219,15 @@ class WeddingTemplate extends Component
         if (!empty($this->galleryImages)) {
             foreach ($this->galleryImages as $img) {
                 if ($img instanceof \Illuminate\Http\UploadedFile) {
-                    $finalGallery[] = $img->store('wedding-images', 'public');
+                    $filename = $img->hashName();
+                    $img->move($destinationPath, $filename);
+                    $finalGallery[] = 'wedding-images/' . $filename;
                 } elseif (is_string($img)) {
-                    // Check if it's a local storage URL and extract path
-                    if (str_contains($img, '/storage/')) {
-                        $parts = explode('/storage/', $img);
+                    // Check if it's a local URL (storage or public) and extract path
+                    if (str_contains($img, 'wedding-images/')) {
+                        $parts = explode('wedding-images/', $img, 2);
                         if (isset($parts[1])) {
-                            $finalGallery[] = $parts[1];
+                            $finalGallery[] = 'wedding-images/' . $parts[1];
                         } else {
                              $finalGallery[] = $img;
                         }
