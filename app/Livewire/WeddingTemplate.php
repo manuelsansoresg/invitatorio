@@ -58,6 +58,7 @@ class WeddingTemplate extends Component
 
     public $isAdmin = false;
     public $showEditor = false;
+    public $updateCount = 0;
 
     public function mount()
     {
@@ -98,10 +99,9 @@ class WeddingTemplate extends Component
             $path = $this->templateModel->hero_image;
             if (filter_var($path, FILTER_VALIDATE_URL)) {
                 $this->heroImage = $path;
-            } elseif (file_exists(public_path($path))) {
-                $this->heroImage = asset($path);
             } else {
-                $this->heroImage = Storage::url($path);
+                // Asumir que es una ruta relativa en public
+                $this->heroImage = asset($path);
             }
         }
         
@@ -109,18 +109,15 @@ class WeddingTemplate extends Component
             $path = $this->templateModel->story_image;
             if (filter_var($path, FILTER_VALIDATE_URL)) {
                 $this->storyImage = $path;
-            } elseif (file_exists(public_path($path))) {
-                $this->storyImage = asset($path);
             } else {
-                $this->storyImage = Storage::url($path);
+                 $this->storyImage = asset($path);
             }
         }
         
         if ($this->templateModel->gallery_images) {
              $this->galleryImages = array_map(function($path) {
                 if (filter_var($path, FILTER_VALIDATE_URL)) return $path;
-                if (file_exists(public_path($path))) return asset($path);
-                return Storage::url($path);
+                return asset($path);
              }, $this->templateModel->gallery_images);
         }
 
@@ -251,6 +248,7 @@ class WeddingTemplate extends Component
         // Reload to get correct URLs
         $this->loadFromModel();
         
+        $this->updateCount++;
         session()->flash('message', 'Cambios guardados exitosamente.');
     }
 

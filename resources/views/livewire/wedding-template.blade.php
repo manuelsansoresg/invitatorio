@@ -178,7 +178,22 @@
         
         {{-- Hero Section --}}
     <header class="relative text-white text-center py-24 px-6 flex flex-col justify-center items-center min-h-[600px] bg-cover bg-center group" 
-            style="background-color: {{ $primaryColor }}; background-blend-mode: multiply; background-image: url('{{ is_string($heroImage) ? $heroImage : ($heroImage ? $heroImage->temporaryUrl() : '') }}');">
+            style="background-color: {{ $primaryColor }}; background-blend-mode: multiply;"
+            x-data="{ 
+                heroPreview: '{{ is_string($heroImage) ? $heroImage : '' }}', 
+                handleFile(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.heroPreview = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            }"
+            :style="`background-image: url('${heroPreview}'); background-color: {{ $primaryColor }}; background-blend-mode: multiply;`"
+            >
         
         @if($isAdmin)
             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
@@ -189,7 +204,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                         </svg>
                     </div>
-                    <input type="file" id="hero-upload" wire:model.live="heroImage" class="hidden" accept="image/*">
+                    <input type="file" id="hero-upload" wire:model.live="heroImage" @change="handleFile" class="hidden" accept="image/*">
                 </label>
             </div>
         @endif
@@ -228,7 +243,20 @@
                 </div>
 
                 {{-- Center: Image + Ampersand --}}
-                <div class="relative group flex justify-center items-center">
+                <div class="relative group flex justify-center items-center"
+                     x-data="{
+                         storyPreview: '{{ is_string($storyImage) ? $storyImage : '' }}',
+                         handleStoryFile(event) {
+                             const file = event.target.files[0];
+                             if (file) {
+                                 const reader = new FileReader();
+                                 reader.onload = (e) => {
+                                     this.storyPreview = e.target.result;
+                                 };
+                                 reader.readAsDataURL(file);
+                             }
+                         }
+                     }">
                     {{-- Ampersand Background --}}
                     <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none select-none">
                          <span class="text-[300px] font-serif text-gray-300">&</span>
@@ -236,7 +264,7 @@
 
                     <div class="w-48 h-48 md:w-60 md:h-60 rounded-full overflow-hidden shadow-xl border-4 border-white bg-gray-200 relative z-10 flex-shrink-0 aspect-square" style="border-radius: 50%;">
                         {{-- Placeholder for Couple Image --}}
-                        <img src="{{ is_string($storyImage) ? $storyImage : ($storyImage ? $storyImage->temporaryUrl() : '') }}" alt="Couple" class="w-full h-full object-cover rounded-full aspect-square" style="border-radius: 50%;">
+                        <img :src="storyPreview" alt="Couple" class="w-full h-full object-cover rounded-full aspect-square" style="border-radius: 50%;">
                         
                         @if($isAdmin)
                             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40 rounded-full aspect-square" style="border-radius: 50%;">
@@ -247,7 +275,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                                         </svg>
                                     </div>
-                                    <input type="file" id="story-upload" wire:model.live="storyImage" class="hidden" accept="image/*">
+                                    <input type="file" id="story-upload" wire:model.live="storyImage" @change="handleStoryFile" class="hidden" accept="image/*">
                                 </label>
                             </div>
                         @endif
@@ -274,27 +302,49 @@
 
         {{-- Video/Photo Banner / Carousel --}}
         <section class="h-96 relative group bg-gray-200" 
-                 wire:key="carousel-{{ count($galleryImages) }}"
+                 wire:ignore
+                 wire:key="gallery-section-{{ $updateCount }}"
                  x-data="{ 
                     activeSlide: 0, 
-                    total: {{ count($galleryImages) }},
+                    images: @js(collect($galleryImages)->filter(fn($i) => is_string($i))->values()->all()),
                     timer: null,
                     init() {
                         this.startTimer();
                     },
                     startTimer() {
                         if (this.timer) clearInterval(this.timer);
-                        if (this.total > 1) {
+                        if (this.images.length > 1) {
                             this.timer = setInterval(() => {
-                                this.activeSlide = (this.activeSlide + 1) % this.total;
+                                this.activeSlide = (this.activeSlide + 1) % this.images.length;
                             }, 3000);
+                        }
+                    },
+                    handleGalleryFiles(event) {
+                        const files = event.target.files;
+                        if (files.length > 0) {
+                            // Reset images to just the existing strings? Or append?
+                            // For simplicity with wire:model, we probably want to show what will be saved.
+                            // But wire:model replaces the whole array usually?
+                            // Let's just append the new previews for now.
+                            // Actually, if we want to replace, we should clear non-strings first?
+                            // Let's just add them.
+                            
+                            Array.from(files).forEach(file => {
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    this.images.push(e.target.result);
+                                    // Restart timer if we now have multiple images
+                                    if (this.images.length > 1) this.startTimer();
+                                };
+                                reader.readAsDataURL(file);
+                            });
                         }
                     }
                  }">
              
             {{-- Carousel Slides --}}
-            @foreach($galleryImages as $index => $img)
-                <div x-show="activeSlide === {{ $index }}" 
+            <template x-for="(img, index) in images" :key="index">
+                <div x-show="activeSlide === index" 
                      x-transition:enter="transition ease-out duration-1000"
                      x-transition:enter-start="opacity-0 transform scale-105"
                      x-transition:enter-end="opacity-100 transform scale-100"
@@ -302,26 +352,24 @@
                      x-transition:leave-start="opacity-100 transform scale-100"
                      x-transition:leave-end="opacity-0 transform scale-95"
                      class="absolute inset-0 bg-cover bg-center"
-                     style="background-image: url('{{ is_string($img) ? $img : $img->temporaryUrl() }}');">
+                     :style="`background-image: url('${img}');`">
                      <div class="absolute inset-0 bg-black/10"></div>
                 </div>
-            @endforeach
+            </template>
             
             {{-- Fallback for no images --}}
-            @if(empty($galleryImages))
-                <div class="absolute inset-0 flex items-center justify-center bg-gray-300">
-                    <span class="text-gray-500 uppercase tracking-widest">Sin imágenes</span>
-                </div>
-            @endif
+            <div x-show="images.length === 0" class="absolute inset-0 flex items-center justify-center bg-gray-300">
+                <span class="text-gray-500 uppercase tracking-widest">Sin imágenes</span>
+            </div>
 
             {{-- Carousel Controls --}}
-            <div class="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-10" x-show="total > 1">
-                @foreach($galleryImages as $index => $img)
-                    <button @click="activeSlide = {{ $index }}; startTimer()" 
+            <div class="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-10" x-show="images.length > 1">
+                <template x-for="(img, index) in images" :key="index">
+                    <button @click="activeSlide = index; startTimer()" 
                             class="w-3 h-3 rounded-full transition-colors duration-300"
-                            :class="activeSlide === {{ $index }} ? 'bg-white' : 'bg-white/50 hover:bg-white/80'">
+                            :class="activeSlide === index ? 'bg-white' : 'bg-white/50 hover:bg-white/80'">
                     </button>
-                @endforeach
+                </template>
             </div>
             
             {{-- Admin Upload Overlay --}}
@@ -334,7 +382,7 @@
                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                              </svg>
                          </div>
-                         <input type="file" id="gallery-upload" wire:model.live="galleryImages" class="hidden" multiple accept="image/*">
+                         <input type="file" id="gallery-upload" wire:model.live="galleryImages" @change="handleGalleryFiles" class="hidden" multiple accept="image/*">
                      </label>
                  </div>
             @endif
